@@ -1,0 +1,35 @@
+name: Validate Papers
+
+on:
+  push:
+    paths:
+      - 'papers/**'
+      - 'scripts/**'
+  pull_request:
+    paths:
+      - 'papers/**'
+      - 'scripts/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate paper schemas
+        run: python scripts/validate.py
+
+      - name: Build index
+        run: python scripts/build_index.py
+
+      - name: Check for uncommitted index changes
+        run: |
+          git diff --exit-code INDEX.md tags/ || {
+            echo "::warning::INDEX.md or tags/ are out of date. Run 'python scripts/build_index.py' locally and commit."
+            exit 1
+          }
