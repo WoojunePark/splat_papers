@@ -392,8 +392,6 @@ def format_comment(comment: dict) -> str:
         m_bullet = bullet_re.match(line)
         
         if m_sub:
-            if out_lines and out_lines[-1].strip() != "":
-                out_lines.append("")
             list_prefix = m_sub.group(1)
             content = m_sub.group(2)
             out_lines.append(f"    {list_prefix} {content}")
@@ -404,8 +402,6 @@ def format_comment(comment: dict) -> str:
         else:
             m_top = top_level_re.match(line)
             if m_top:
-                if out_lines and out_lines[-1].strip() != "":
-                    out_lines.append("")
                 list_prefix = m_top.group(1)
                 content = m_top.group(2)
                 out_lines.append(f"{list_prefix} {content}")
