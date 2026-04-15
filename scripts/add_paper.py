@@ -529,7 +529,7 @@ def _build_issue_body(
     lines = [
         f"## [{title}]({abs_url})",
         "",
-        f"**Status:** `to-read` | **Added:** {date_str}",
+        f"**Status:** `to-read` | **Published:** {date_str}",
         "",
         "### Abstract",
         "",

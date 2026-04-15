@@ -122,7 +122,7 @@ python scripts/sync_issues.py --issue 42 # sync a specific issue
 | Field | Type | Notes |
 |---|---|---|
 | `title` | string | Full paper title, quoted |
-| `date` | date | arXiv submission date |
+| `date` | date | arXiv publication date |
 | `arxiv` | string | arXiv ID, quoted |
 | `status` | enum | `to-read` → `skimmed` → `read` |
 | `issue` | int | GitHub Issue number (cleared after sync) |

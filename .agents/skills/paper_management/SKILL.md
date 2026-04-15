@@ -149,7 +149,7 @@ Copy the template and name it following the `YYMM_kebab-case-name.md` convention
 papers/_template.md  →  papers/YYMM_paper-name.md
 ```
 
-- `YYMM` = the ArXiv submission year-month (e.g., `2308` for August 2023)
+- `YYMM` = the ArXiv publication year-month (e.g., `2308` for August 2023)
 - `paper-name` = short, recognizable kebab-case name
 
 ### Fill frontmatter
@@ -159,7 +159,7 @@ papers/_template.md  →  papers/YYMM_paper-name.md
 | Field | Format | Example |
 |---|---|---|
 | `title` | Full paper title in quotes | `"3D Gaussian Splatting for..."` |
-| `date` | `YYYY-MM-DD` | `2023-08-08` |
+| `date` | arXiv publication date (`YYYY-MM-DD`) | `2023-08-08` |
 | `arxiv` | ArXiv ID in quotes (prevents YAML float parsing) | `"2308.04079"` |
 | `status` | One of: `read`, `skimmed`, `to-read` | `read` |
 | `inputs` | List of kebab-case tags | `[posed-multi-view-images]` |
