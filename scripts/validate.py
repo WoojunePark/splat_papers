@@ -10,6 +10,16 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from tag_utils import normalize_tag as _normalize_tag
+except ImportError:
+    def _normalize_tag(s: str) -> str:  # type: ignore[misc]
+        import re as _re
+        s = s.strip().lower()
+        s = _re.sub(r'[^a-z0-9]+', '-', s)
+        return s.strip('-')
+
 # ---------------------------------------------------------------------------
 # YAML parser (same as build_index.py — kept standalone for independence)
 # ---------------------------------------------------------------------------
@@ -135,7 +145,11 @@ def validate_paper(filepath: Path, all_paper_stems: set[str] | None = None) -> t
             continue
         for tag in tags:
             if isinstance(tag, str) and tag and not TAG_PATTERN.match(tag):
-                errors.append(f"Tag '{tag}' in {ns} has invalid format (use kebab-case)")
+                suggestion = _normalize_tag(tag)
+                hint = f" → did you mean '{suggestion}'?" if suggestion and suggestion != tag else ""
+                errors.append(
+                    f"Tag '{tag}' in {ns} has invalid format (use kebab-case){hint}"
+                )
 
     # ArXiv ID format
     arxiv = meta.get("arxiv", "")

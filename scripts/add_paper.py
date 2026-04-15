@@ -557,9 +557,28 @@ def _build_issue_body(
     lines += [
         "---",
         "",
+        "### 📝 Reading Notes Template",
+        "",
+        "Leave a comment using the sections below.",
+        "Bullet items under each heading are synced to the paper's YAML tags.",
+        "Any other text goes to `## My Notes`.",
+        "Heading level (`#` or `##`) and singular/plural spelling both work.",
+        "",
+        "```",
+        "## inputs",
+        "- ",
+        "",
+        "## outputs",
+        "- ",
+        "",
+        "## methods",
+        "- ",
+        "",
+        "Free-form reading notes here.",
+        "```",
+        "",
         "*Managed by splat-papers. "
-        "Close this issue once you have read the paper. "
-        "Leave comments for your reading notes — they will be synced back to `## My Notes`.*",
+        "Close this issue once you have read the paper.*",
     ]
     return "\n".join(lines)
 

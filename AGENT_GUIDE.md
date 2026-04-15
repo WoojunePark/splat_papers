@@ -63,8 +63,32 @@ python scripts/add_paper.py 2308.04079 --force      # overwrite existing file
 
 The user reads the paper via the GitHub Issue on mobile:
 - Issue body contains: abstract, links (arXiv / PDF / HTML / website / code), top 3 figures.
-- User leaves comments with reading notes.
+- Issue body also includes a **Reading Notes Template** the user can copy into a comment.
+- User leaves comments with reading notes and/or structured tags (see format below).
 - User closes the issue when done reading.
+
+#### Structured Comment Format
+
+The user can write structured sections in any comment to set YAML tags on sync.
+Heading level (`#` / `##` / `###`) and singular/plural spelling both work.
+
+```markdown
+## inputs
+- posed-multi-view-images
+- video
+
+## outputs
+- novel-view
+- 3d-gaussians
+
+## methods
+- 3dgs
+
+Any free-form text here is synced to ## My Notes.
+```
+
+Tags in structured sections are **merged** into the existing YAML lists (never replaced).
+Comments with no structured sections are treated entirely as `## My Notes` entries (existing behavior).
 
 ---
 
@@ -76,11 +100,12 @@ The user reads the paper via the GitHub Issue on mobile:
 The `sync_issues.yml` workflow fires automatically. It:
 1. Reads all comments from the closed issue via GitHub REST API.
 2. Finds the matching `papers/YYMM_*.md` by `issue:` frontmatter field.
-3. Appends formatted comments to `## My Notes`.
-4. Sets `status: read` in frontmatter.
-5. Clears the `issue:` field.
-6. Runs `validate.py` + `build_index.py`.
-7. Commits and pushes back to `main`.
+3. Parses structured sections (`## inputs` / `## outputs` / `## methods`) and merges tags into YAML.
+4. Appends free-form comment text to `## My Notes`.
+5. Sets `status: read` in frontmatter.
+6. Clears the `issue:` field.
+7. Runs `validate.py` + `build_index.py`.
+8. Commits and pushes back to `main`.
 
 **Manual path (local CLI):**
 ```bash
@@ -90,6 +115,7 @@ python scripts/sync_issues.py --issue 42 # sync a specific issue
 ```
 
 ---
+
 
 ## Key Frontmatter Fields Reference
 

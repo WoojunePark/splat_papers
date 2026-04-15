@@ -4,8 +4,24 @@ sync_issues.py -- Integrate phase of the GTD reading workflow.
 
 Finds closed GitHub Issues labeled ``inbox``, matches them to local paper .md
 files via the ``issue:`` frontmatter field, appends any user comments to the
-``## My Notes`` section, marks the paper ``status: read``, and clears the
-``issue:`` field to prevent re-syncing.
+``## My Notes`` section, patches ``inputs``/``outputs``/``methods`` YAML lists
+from structured comment sections, marks the paper ``status: read``, and clears
+the ``issue:`` field to prevent re-syncing.
+
+Structured comment format (any heading level, singular or plural spelling):
+
+    ## inputs
+    - posed-multi-view-images
+    - video
+
+    ## outputs
+    - novel-view
+    - 3d-gaussians
+
+    ## methods
+    - 3dgs
+
+    Any free-form text here goes to ## My Notes.
 
 Usage:
     python scripts/sync_issues.py             # sync all newly closed issues
@@ -20,6 +36,14 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+# tag_utils lives in the same scripts/ directory
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from tag_utils import (
+    normalize_tag,
+    load_known_tags,
+    correct_tags,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -156,6 +180,174 @@ def _append_to_my_notes(text: str, new_lines: list[str]) -> str:
         return text.rstrip() + "\n\n## My Notes\n\n" + block + "\n"
 
 
+# ---------------------------------------------------------------------------
+# Structured comment parsing
+# ---------------------------------------------------------------------------
+
+# Maps known heading spellings (singular + plural) to canonical field names.
+_FIELD_HEADINGS: dict[str, str] = {
+    "input":   "inputs",
+    "inputs":  "inputs",
+    "output":  "outputs",
+    "outputs": "outputs",
+    "method":  "methods",
+    "methods": "methods",
+}
+
+# Matches any Markdown heading level (1-3 #) followed by a known field name.
+_SECTION_RE = re.compile(
+    r'^#{1,3}\s+(' + '|'.join(_FIELD_HEADINGS) + r')\s*$',
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def parse_structured_comment(
+    body: str,
+    known_tags: dict[str, set[str]] | None = None,
+) -> dict:
+    """
+    Split a comment body into structured metadata fields and free-form notes.
+
+    Recognises ``# inputs`` / ``## outputs`` / ``### methods`` headings
+    (and their singular variants) at any heading level 1–3, case-insensitive.
+    Bullet items (``- tag``) under those headings are normalised to
+    kebab-case, then fuzzy-corrected against ``known_tags`` (if supplied).
+    Everything else is collected as free-form notes text.
+
+    Returns::
+
+        {
+            "inputs":  ["tag1", "tag2"],
+            "outputs": ["tag3"],
+            "methods": ["tag4"],
+            "notes":   "remaining free text",
+        }
+    """
+    result: dict[str, list | str] = {
+        "inputs":  [],
+        "outputs": [],
+        "methods": [],
+        "notes":   "",
+    }
+
+    lines = body.splitlines()
+    current_field: str | None = None  # which structured field we're in
+    notes_lines: list[str] = []
+    # Raw accumulated tags per field (corrected in one pass at the end)
+    raw_tags: dict[str, list[str]] = {"inputs": [], "outputs": [], "methods": []}
+
+    for line in lines:
+        heading_m = _SECTION_RE.match(line)
+        if heading_m:
+            current_field = _FIELD_HEADINGS[heading_m.group(1).lower()]
+            continue
+
+        if current_field is not None:
+            # Check if this line starts a new *unknown* heading (exit struct mode)
+            if re.match(r'^#{1,3}\s+', line):
+                current_field = None
+                notes_lines.append(line)
+                continue
+            # Bullet item inside a structured section
+            bullet_m = re.match(r'^[-*]\s+(.+)', line)
+            if bullet_m:
+                tag = normalize_tag(bullet_m.group(1))
+                if tag:
+                    raw_tags[current_field].append(tag)
+            # blank line: stay in section, ignore
+            # non-bullet non-blank: treat as a note and exit field mode
+            elif line.strip():
+                current_field = None
+                notes_lines.append(line)
+        else:
+            notes_lines.append(line)
+
+    # Fuzzy-correct + dedup all accumulated tags
+    for field in ("inputs", "outputs", "methods"):
+        result[field] = correct_tags(
+            raw_tags[field],
+            known_tags or {},
+            field,
+            verbose=bool(known_tags),
+        )
+
+    result["notes"] = "\n".join(notes_lines).strip()
+    return result
+
+
+def _patch_frontmatter_list_field(text: str, field: str, new_tags: list[str]) -> str:
+    """
+    Merge ``new_tags`` into the YAML list field ``field`` in the frontmatter.
+
+    - If the field's current list is empty (``- `` placeholder), replaces it.
+    - Otherwise unions the existing tags with ``new_tags`` (dedup, order preserved).
+    - If no tags to add, returns ``text`` unchanged.
+    """
+    if not new_tags:
+        return text
+
+    lines = text.splitlines(keepends=True)
+    in_front = False
+    front_end = 0
+    i = 0
+    fence_count = 0
+
+    # Locate the frontmatter block boundaries
+    field_line: int | None = None
+    field_end: int | None = None   # first line that is NOT part of the list
+
+    i = 0
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if stripped == "---":
+            fence_count += 1
+            if fence_count == 2:
+                front_end = i
+                break
+            continue
+        if fence_count == 1:
+            if re.match(rf'^{re.escape(field)}:', line):
+                field_line = i
+            elif field_line is not None and field_end is None:
+                if re.match(r'^\s+-', line):
+                    pass  # still a list item
+                else:
+                    field_end = i  # first non-list line after field
+
+    if field_line is None:
+        return text  # field not found — leave unchanged
+
+    if field_end is None:
+        field_end = front_end  # list runs all the way to closing ---
+
+    # Collect existing tags from the current list lines
+    existing: list[str] = []
+    for li in lines[field_line + 1 : field_end]:
+        bm = re.match(r'^\s+-\s*(\S.*)', li)
+        if bm:
+            existing.append(bm.group(1).strip())
+
+    # Union: existing (non-empty) + new_tags
+    seen: set[str] = set()
+    merged: list[str] = []
+    for t in existing + new_tags:
+        if t and t not in seen:
+            seen.add(t)
+            merged.append(t)
+
+    if not merged:
+        return text
+
+    # Rebuild the block: field header line + list items
+    eol = "\r\n" if lines[field_line].endswith("\r\n") else "\n"
+    new_block = [f"{field}:{eol}"]
+    for t in merged:
+        new_block.append(f"  - {t}{eol}")
+
+    result = lines[:field_line] + new_block + lines[field_end:]
+    return "".join(result)
+
+
 def format_comment(comment: dict) -> str:
     """Format a single GitHub issue comment as a Markdown block."""
     body = comment.get("body", "").strip()
@@ -187,6 +379,11 @@ def sync_issue(
     """
     Sync a single closed issue back to its paper .md file.
 
+    - Appends free-form comments to ``## My Notes``.
+    - Merges structured ``## inputs`` / ``## outputs`` / ``## methods`` section
+      items from comments into the paper's YAML frontmatter list fields.
+    - Sets ``status: read`` and clears the ``issue:`` field.
+
     Returns True if a paper was found and updated (or would be), False otherwise.
     """
     number = issue["number"]
@@ -214,10 +411,38 @@ def sync_issue(
     else:
         print(f"  Comments to sync: {len(user_comments)}")
 
+    # Load known tags from the papers corpus for fuzzy correction
+    known_tags = load_known_tags(papers_dir)
+
+    # Parse all comments for structured metadata + free-form notes
+    all_inputs:  list[str] = []
+    all_outputs: list[str] = []
+    all_methods: list[str] = []
+    note_lines:  list[str] = []
+
+    for c in user_comments:
+        body = c.get("body", "").strip()
+        parsed = parse_structured_comment(body, known_tags)
+        all_inputs.extend(parsed["inputs"])
+        all_outputs.extend(parsed["outputs"])
+        all_methods.extend(parsed["methods"])
+        # Format the free-form notes portion (may be empty)
+        notes_comment = dict(c, body=parsed["notes"]) if parsed["notes"] else None
+        if notes_comment:
+            formatted = format_comment(notes_comment)
+            if formatted:
+                note_lines.append(formatted)
+
     if dry_run:
-        for c in user_comments:
-            print(f"    → {format_comment(c)[:80]}...")
-        print("  [dry-run] Would update: status=read, issue=, My Notes+=comments")
+        if all_inputs:
+            print(f"  [dry-run] inputs  tags to merge: {all_inputs}")
+        if all_outputs:
+            print(f"  [dry-run] outputs tags to merge: {all_outputs}")
+        if all_methods:
+            print(f"  [dry-run] methods tags to merge: {all_methods}")
+        if note_lines:
+            print(f"  [dry-run] {len(note_lines)} note block(s) → ## My Notes")
+        print("  [dry-run] Would update: status=read, issue=<cleared>")
         return True
 
     text = md_file.read_text(encoding="utf-8")
@@ -228,12 +453,19 @@ def sync_issue(
     # 2. Clear issue field (mark as synced)
     text = _patch_frontmatter_field(text, "issue", "")
 
-    # 3. Append comments to ## My Notes
-    note_lines = [format_comment(c) for c in user_comments if format_comment(c)]
+    # 3. Merge structured tags into YAML list fields
+    tag_summary: list[str] = []
+    for field, tags in (("inputs", all_inputs), ("outputs", all_outputs), ("methods", all_methods)):
+        if tags:
+            text = _patch_frontmatter_list_field(text, field, tags)
+            tag_summary.append(f"{field}+{len(tags)}")
+
+    # 4. Append free-form notes to ## My Notes
     text = _append_to_my_notes(text, note_lines)
 
     md_file.write_text(text, encoding="utf-8")
-    print(f"  ✓ Updated {md_file.name} (status=read, {len(note_lines)} notes synced)")
+    tag_info = f", tags: {' '.join(tag_summary)}" if tag_summary else ""
+    print(f"  ✓ Updated {md_file.name} (status=read, {len(note_lines)} note(s){tag_info})")
     return True
 
 

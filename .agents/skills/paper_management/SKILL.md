@@ -235,7 +235,46 @@ Store one architecture/method diagram per paper in `papers/figures/`:
 
 ## Tag Conventions
 
-- Tags use **kebab-case**: `posed-multi-view-images`, not `Posed Multi View Images`
+### Canonical format: lowercase kebab-case
+
+All tags **must** be lowercase kebab-case:
+
+| ✅ Correct | ❌ Wrong | Rule |
+|---|---|---|
+| `multi-view-images` | `multi_view_images` | underscores → hyphens |
+| `multi-view-images` | `Multi View Images` | spaces → hyphens, lowercase |
+| `3dgs` | `3DGS` | always lowercase |
+| `posed-multi-view-images` | `posedMultiViewImages` | no camelCase |
+
+### Auto-normalisation (sync_issues.py)
+
+When tags come in via GitHub Issue comments, `sync_issues.py` **automatically normalises** them:
+- `Multi_View` → `multi-view`
+- `3DGS` → `3dgs`
+- `posed multi view images` → `posed-multi-view-images`
+
+You do **not** need to worry about casing or separator style when writing comments on mobile.
+
+### Fuzzy correction
+
+After normalisation, `sync_issues.py` fuzzy-matches each tag against all existing tags in the corpus (using `difflib`). If a close match is found (≥ 82% similarity), the tag is silently corrected and a note is printed:
+
+```
+[tag] 'posed-multi-view-image' → 'posed-multi-view-images' (fuzzy-corrected from known tags)
+```
+
+If no close match exists, the tag is kept as-is (new tags are always welcome).
+
+### validate.py hints
+
+If a malformed tag slips into a `.md` file, `validate.py` shows a suggestion:
+
+```
+ERROR: Tag 'multi_view' in inputs has invalid format (use kebab-case) → did you mean 'multi-view'?
+```
+
+### Other tag rules
+
 - Tags are **open-ended** — add new tags freely; `build_index.py` discovers them dynamically
 - Use **fine-grained tags** by default; broad filtering is handled automatically via prefix matching
   - Fine: `posed-multi-view-images`, `unposed-multi-view-images`
@@ -270,6 +309,24 @@ If `gh` CLI is not installed, issue creation is skipped with a warning. See `REA
 #### Phase 2 — ENGAGE (human-driven, on GitHub mobile)
 
 No agent action needed. The user opens the issue on mobile, reads the abstract/figures, leaves comments, and closes the issue when done.
+
+The issue body contains a **Reading Notes Template**. Copy it into a comment and fill in the bullet lists to tag the paper on sync. Any text outside the structured sections becomes a `## My Notes` entry.
+
+```markdown
+## inputs
+- posed-multi-view-images
+
+## outputs
+- novel-view
+- 3d-gaussians
+
+## methods
+- 3dgs
+
+These are my reading notes — goes to ## My Notes.
+```
+
+**Heading level and spelling are flexible:** `# input`, `## inputs`, `### methods`, etc. all work.
 
 #### Phase 3 — INTEGRATE (automatic via GitHub Actions, or manual)
 
