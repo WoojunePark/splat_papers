@@ -130,16 +130,7 @@ def paper_matches(paper: dict, args) -> bool:
     if args.before and date_str > args.before:
         return False
 
-    # Author filter (substring match, case-insensitive)
-    if args.author:
-        authors = paper.get("authors", [])
-        if not isinstance(authors, list):
-            return False
-        query_lower = args.author.lower()
-        if not any(query_lower in str(a).lower() for a in authors):
-            return False
 
-    # Title search (substring, case-insensitive)
     if args.title:
         title = str(paper.get("title", "")).lower()
         if args.title.lower() not in title:
@@ -169,7 +160,6 @@ def main():
                         help="Filter by reading status")
     parser.add_argument("--after", help="Papers after date (YYYY-MM-DD)")
     parser.add_argument("--before", help="Papers before date (YYYY-MM-DD)")
-    parser.add_argument("--author", "-a", help="Filter by author name (substring)")
     parser.add_argument("--title", "-t", help="Filter by title (substring)")
 
     # Output modes

@@ -4,17 +4,12 @@ date: 2025-03-08
 arxiv: "2503.06271"
 venue:
 status: to-read
-authors:
-  - Anh Thai
-  - Songyou Peng
-  - Kyle Genova
-  - Leonidas Guibas
-  - Thomas Funkhouser
 
 abstract: "Language-guided 3D scene understanding is important for advancing applications in robotics, AR/VR, and human-computer interaction, enabling models to comprehend and interact with 3D environments through natural language. While 2D vision-language models (VLMs) have achieved remarkable success in 2D VQA tasks, progress in the 3D domain has been significantly slower due to the complexity of 3D data and the high cost of manual annotations. In this work, we introduce SplatTalk, a novel method that uses a generalizable 3D Gaussian Splatting (3DGS) framework to produce 3D tokens suitable for direct input into a pretrained LLM, enabling effective zero-shot 3D visual question answering (3D VQA) for scenes with only posed images. During experiments on multiple benchmarks, our approach outperforms both 3D models trained specifically for the task and previous 2D-LMM-based models utilizing only images (our setting), while achieving competitive performance with state-of-the-art 3D LMMs that additionally utilize 3D inputs. Project website: this https URL"
 
 website: https://splat-talk.github.io
-code: 
+code: https://github.com/ngailapdi/SplatTalk
+issue: 6
 
 inputs:
   - 
@@ -35,9 +30,9 @@ compared:
   - 
 ---
 
+## My Notes
+
 ## LLM Summary
-
-
 
 ## Results
 
@@ -66,6 +61,3 @@ compared:
 ![Figure](https://arxiv.org/html/2503.06271/x5.png)
 
 *Figure 5: Qualitative results on ScanQA, scene0100_00, scene0193_00, and scene0426_00. We compare responses from LLaVA-OV, our model (Ours), and the ground truth (GT) for spatial reasoning questions in 3D VQA. Each scene highlights the referenced objects with red circles, and key relative objects are marked in blue. The answers from each model are displayed in color-coded speech bubbles: LLaVA-OV (brown), Ours (blue), and GT (green). With its 3D-aware representation, our model exhibits improved spatial reasoning capabilities.*
-
-## My Notes
-

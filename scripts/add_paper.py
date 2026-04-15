@@ -7,6 +7,9 @@ Automatically extracts ``website`` and ``code`` URLs by parsing:
   1. Hyperlinks in the arXiv abstract-page HTML (comments field + all anchors).
   2. Hyperlink annotations embedded in the PDF (via ``pypdf``).
 
+Also creates a GitHub Issue (requires ``gh`` CLI) to populate the GTD inbox.
+Use ``--no-issue`` to skip issue creation.
+
 No LLM calls are made.
 
 Usage:
@@ -14,11 +17,15 @@ Usage:
     python scripts/add_paper.py 2308.04079 --name 3d-gaussian-splatting
     python scripts/add_paper.py 2308.04079 --summary   # put abstract in LLM Summary
     python scripts/add_paper.py 2308.04079 --no-pdf    # skip PDF download
+    python scripts/add_paper.py 2308.04079 --no-issue  # skip GitHub Issue creation
 """
 
 import argparse
 import io
+import json
 import re
+import shutil
+import subprocess
 import sys
 import urllib.request
 import urllib.error
@@ -46,7 +53,7 @@ def fetch_text(url: str, timeout: int = 30) -> str:
 # ---------------------------------------------------------------------------
 
 def parse_arxiv_abstract_page(html: str) -> dict:
-    """Extract title, authors, abstract, date, and comment from arXiv HTML."""
+    """Extract title, abstract, date, and comment from arXiv HTML."""
     meta: dict = {}
 
     # Title
@@ -58,16 +65,6 @@ def parse_arxiv_abstract_page(html: str) -> dict:
         title = re.sub(r"\s+", " ", title)
         title = re.sub(r"^Title:\s*", "", title)
         meta["title"] = title
-
-    # Authors
-    authors_block = re.search(r'<div class="authors">(.*?)</div>', html, re.DOTALL)
-    if authors_block:
-        author_links = re.findall(r">([^<]+)</a>", authors_block.group(1))
-        if not author_links:
-            text = re.sub(r"<[^>]+>", "", authors_block.group(1))
-            text = re.sub(r"Authors?:\s*", "", text).strip()
-            author_links = [a.strip() for a in text.split(",") if a.strip()]
-        meta["authors"] = author_links
 
     # Abstract
     abstract_block = re.search(
@@ -287,6 +284,42 @@ def extract_links_from_pdf(arxiv_id: str) -> list[tuple[int, str]]:
     return results
 
 
+def extract_github_from_website(website_url: str) -> str:
+    """Fetch website HTML and search for a GitHub/GitLab repo link."""
+    if not website_url or not website_url.startswith("http"):
+        return ""
+    
+    try:
+        # Some project pages block non-browser user agents
+        req = urllib.request.Request(
+            website_url, 
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+    except Exception as exc:
+        print(f"  [warn] Failed to fetch project page ({website_url}): {exc}")
+        return ""
+
+    for href in re.findall(r'href=["\x27]?(https?://[^"\x27>\s]+)', html):
+        u = _clean_url(href)
+        if _is_blocked(u):
+            continue
+        if _CODE_REPO_RE.search(u):
+            return u
+
+    # Check for bare links
+    html_text = re.sub(r"<[^>]+>", " ", html)
+    for bare in re.findall(r"https?://(?:github|gitlab)\.com/\S+", html_text):
+        u = _clean_url(bare)
+        if _is_blocked(u):
+            continue
+        if _CODE_REPO_RE.search(u):
+            return u
+
+    return ""
+
+
 # ---------------------------------------------------------------------------
 # Link classification
 # ---------------------------------------------------------------------------
@@ -380,13 +413,11 @@ def generate_paper_md(
     code: str,
     summary_text: str = "",
     figures: list[dict] = None,
+    issue_number: int = 0,
 ) -> str:
     """Generate the markdown content for a paper entry."""
     title = meta.get("title", "")
     date_str = meta.get("date", "YYYY-MM-DD")
-    authors = meta.get("authors", [])
-
-    authors_yaml = "\n".join(f"  - {a}" for a in authors) if authors else "  - "
 
     llm_summary = summary_text or ""
 
@@ -405,13 +436,12 @@ def generate_paper_md(
         f'arxiv: "{arxiv_id}"',
         "venue:",
         "status: to-read",
-        "authors:",
-        authors_yaml,
         "",
         abstract_yaml,
         "",
         f"website: {website}",
         f"code: {code}",
+        f"issue: {issue_number if issue_number else ''}",
         "",
         "inputs:",
         "  - ",
@@ -431,6 +461,9 @@ def generate_paper_md(
         "compared:",
         "  - ",
         "---",
+        "",
+        "## My Notes",
+        "",
         "",
         "## LLM Summary",
         "",
@@ -459,13 +492,144 @@ def generate_paper_md(
             lines.append(f"*{caption}*")
             lines.append("")
 
-    lines.extend([
-        "## My Notes",
-        "",
-        "",
-    ])
-
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# GitHub Issue creation (GTD Capture phase)
+# ---------------------------------------------------------------------------
+
+def _gh_available() -> bool:
+    """Return True if the ``gh`` CLI is installed and reachable."""
+    return shutil.which("gh") is not None
+
+
+def _build_issue_body(
+    arxiv_id: str,
+    meta: dict,
+    website: str,
+    code: str,
+    figures: list[dict],
+) -> str:
+    """Build the GitHub Issue body for the Capture phase."""
+    title = meta.get("title", arxiv_id)
+    date_str = meta.get("date", "")
+    abstract = meta.get("abstract", "*(abstract not available)*")
+
+    abs_url = f"https://arxiv.org/abs/{arxiv_id}"
+    pdf_url = f"https://arxiv.org/pdf/{arxiv_id}"
+    html_url = f"https://arxiv.org/html/{arxiv_id}"
+
+    links = [f"[arXiv]({abs_url})", f"[PDF]({pdf_url})", f"[HTML]({html_url})"]
+    if website:
+        links.append(f"[Website]({website})")
+    if code:
+        links.append(f"[Code]({code})")
+
+    lines = [
+        f"## [{title}]({abs_url})",
+        "",
+        f"**Status:** `to-read` | **Added:** {date_str}",
+        "",
+        "### Abstract",
+        "",
+        f"> {abstract}",
+        "",
+        "### Links",
+        "",
+        " | ".join(links),
+        "",
+    ]
+
+    top_figs = (figures or [])[:3]
+    if top_figs:
+        lines.append("### Figures")
+        lines.append("")
+        for fig in top_figs:
+            src = fig.get("src", "")
+            cap = fig.get("caption", "") or "Figure"
+            cap_short = cap[:120] + "..." if len(cap) > 120 else cap
+            if src:
+                lines.append(f"![{cap_short}]({src})")
+                lines.append(f"*{cap_short}*")
+                lines.append("")
+
+    lines += [
+        "---",
+        "",
+        "*Managed by splat-papers. "
+        "Close this issue once you have read the paper. "
+        "Leave comments for your reading notes — they will be synced back to `## My Notes`.*",
+    ]
+    return "\n".join(lines)
+
+
+def create_github_issue(
+    arxiv_id: str,
+    meta: dict,
+    website: str,
+    code: str,
+    figures: list[dict],
+) -> int:
+    """
+    Create a GitHub Issue using the ``gh`` CLI.
+
+    Returns the issue number on success, or 0 on failure.
+    The caller should store the number in the paper's ``issue:`` field.
+    """
+    if not _gh_available():
+        print(
+            "\n[skip] GitHub Issue NOT created — `gh` CLI not found.\n"
+            "       Install it from https://cli.github.com and run `gh auth login`,\n"
+            "       then re-run with: python scripts/add_paper.py {arxiv_id} --force"
+        )
+        return 0
+
+    title = meta.get("title", arxiv_id)
+    issue_title = f"[📥 Inbox] {title}"
+    body = _build_issue_body(arxiv_id, meta, website, code, figures)
+
+    # Ensure labels exist before using them (gh creates labels implicitly on GitHub,
+    # but `gh issue create` can fail if labels don't exist in the repo).
+    # We attempt creation and silently ignore errors (label may already exist).
+    for label_spec in [
+        ("inbox", "Inbox — paper added, not yet read", "0075ca"),
+        ("to-read", "Paper queued for reading", "e4e669"),
+    ]:
+        try:
+            subprocess.run(
+                ["gh", "label", "create", label_spec[0],
+                 "--description", label_spec[1],
+                 "--color", label_spec[2], "--force"],
+                capture_output=True, check=False,
+            )
+        except Exception:
+            pass
+
+    try:
+        result = subprocess.run(
+            ["gh", "issue", "create",
+             "--title", issue_title,
+             "--body", body,
+             "--label", "inbox",
+             "--label", "to-read",
+             "--assignee", "@me"],
+            capture_output=True, text=True, check=True,
+        )
+        # gh prints the issue URL on stdout, e.g. https://github.com/owner/repo/issues/42
+        url = result.stdout.strip()
+        print(f"  GitHub Issue created: {url}")
+        # Extract issue number from URL
+        m = re.search(r"/(\d+)$", url)
+        return int(m.group(1)) if m else 0
+    except subprocess.CalledProcessError as exc:
+        err = exc.stderr.strip() if exc.stderr else str(exc)
+        print(f"\n[warn] GitHub Issue creation failed: {err}")
+        print("       You can create it manually or re-run after fixing `gh` auth.")
+        return 0
+    except Exception as exc:
+        print(f"\n[warn] Unexpected error during issue creation: {exc}")
+        return 0
 
 
 # ---------------------------------------------------------------------------
@@ -495,6 +659,11 @@ def main() -> None:
         "--no-pdf",
         action="store_true",
         help="Skip PDF download for link extraction (faster, less accurate)",
+    )
+    parser.add_argument(
+        "--no-issue",
+        action="store_true",
+        help="Skip GitHub Issue creation (default: create issue in GTD inbox)",
     )
 
     args = parser.parse_args()
@@ -530,13 +699,6 @@ def main() -> None:
 
     print(f"  Title:   {meta['title']}")
     print(f"  Date:    {meta.get('date', 'unknown')}")
-    authors_preview = meta.get("authors", [])
-    preview_str = ", ".join(authors_preview[:3])
-    if len(authors_preview) > 3:
-        preview_str += " ..."
-    # Safely print on Windows consoles that may not support all Unicode chars
-    safe_preview = preview_str.encode(sys.stdout.encoding or "utf-8", errors="replace").decode(sys.stdout.encoding or "utf-8")
-    print(f"  Authors: {safe_preview}")
 
     # ------------------------------------------------------------------
     # 2. Extract links (HTML page + PDF)
@@ -552,6 +714,10 @@ def main() -> None:
     links = classify_links(comments_urls, other_html_urls, pdf_links)
     website = links["website"]
     code = links["code"]
+
+    if website and not code:
+        print(f"  Scanning project page for code link: {website} ...")
+        code = extract_github_from_website(website)
 
     print(f"  website => {website or '(not found)'}")
     print(f"  code    => {code or '(not found)'}")
@@ -575,13 +741,25 @@ def main() -> None:
         sys.exit(1)
 
     # ------------------------------------------------------------------
-    # 4. Generate and write the paper entry
+    # 4. Create GitHub Issue (GTD Capture phase)
+    # ------------------------------------------------------------------
+    issue_number = 0
+    if not args.no_issue:
+        print("Creating GitHub Issue (GTD inbox) ...")
+        issue_number = create_github_issue(arxiv_id, meta, website, code, figures)
+
+    # ------------------------------------------------------------------
+    # 5. Generate and write the paper entry
     # ------------------------------------------------------------------
     summary_text = meta.get("abstract", "") if args.summary else ""
-    content = generate_paper_md(arxiv_id, meta, website, code, summary_text, figures)
+    content = generate_paper_md(
+        arxiv_id, meta, website, code, summary_text, figures, issue_number
+    )
     filepath.write_text(content, encoding="utf-8")
 
     print(f"\nCreated: {filepath}")
+    if issue_number:
+        print(f"GitHub Issue #{issue_number} opened — check GitHub mobile to read on the go.")
     print("\nNext steps:")
     print(f"  1. Edit {filename} - fill in tags, venue")
     if not website:
@@ -590,6 +768,9 @@ def main() -> None:
         print("  3. Manually add code URL (not found automatically)")
     print("  4. Run: python scripts/validate.py")
     print("  5. Run: python scripts/build_index.py")
+    if issue_number:
+        print(f"  6. When done reading: close GitHub Issue #{issue_number}")
+        print("     → sync_issues.py will sync your comments back to '## My Notes'")
 
 
 if __name__ == "__main__":

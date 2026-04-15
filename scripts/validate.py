@@ -82,11 +82,11 @@ def _parse_scalar(value: str):
 # ---------------------------------------------------------------------------
 
 REQUIRED_FIELDS = ["title", "date", "arxiv", "status", "inputs", "outputs", "methods"]
-OPTIONAL_LIST_FIELDS = ["authors", "benchmarks", "related", "compared"]
+OPTIONAL_LIST_FIELDS = ["benchmarks", "related", "compared"]
 VALID_STATUSES = {"read", "skimmed", "to-read"}
 TAG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$")
 FILENAME_PATTERN = re.compile(r"^\d{4}_.+\.md$")
-REQUIRED_SECTIONS = ["## LLM Summary"]
+REQUIRED_SECTIONS = ["## My Notes", "## LLM Summary"]
 
 
 def validate_paper(filepath: Path, all_paper_stems: set[str] | None = None) -> list[str]:
@@ -165,13 +165,6 @@ def validate_paper(filepath: Path, all_paper_stems: set[str] | None = None) -> l
                     errors.append(
                         f"Reference '{ref}' in {ref_field} not found in papers/"
                     )
-
-    # Authors validation (warn if empty, but not required)
-    authors = meta.get("authors", [])
-    if isinstance(authors, list) and authors:
-        for a in authors:
-            if not isinstance(a, str) or not a.strip():
-                errors.append("Empty author entry in authors list")
 
     return errors
 

@@ -11,6 +11,8 @@ This skill covers how to interact with the `splat_papers` knowledge base — rea
 
 ```
 splat_papers/
+├── README.md                  # Human-facing guide
+├── AGENT_GUIDE.md             # LLM agent guide (GTD workflow + field reference)
 ├── papers/
 │   ├── _template.md          # Copy this to create new entries
 │   ├── YYMM_paper-name.md    # One file per paper
@@ -18,7 +20,8 @@ splat_papers/
 ├── INDEX.md                   # Auto-generated master table + relationship graph
 ├── tags/                      # Auto-generated tag pages
 └── scripts/
-    ├── add_paper.py           # Creates entry from arXiv ID
+    ├── add_paper.py           # CAPTURE: Creates entry from arXiv ID + opens GitHub Issue
+    ├── sync_issues.py         # INTEGRATE: Syncs closed issues → ## My Notes
     ├── query.py               # Filters papers for LLM piping
     ├── build_index.py         # Regenerates INDEX.md + tag pages
     └── validate.py            # Checks frontmatter schema + cross-refs
@@ -43,10 +46,11 @@ splat_papers/
 
 Each `papers/YYMM_*.md` file is self-contained with:
 
-- **YAML frontmatter**: structured metadata (title, date, arxiv ID, authors, tags, etc.)
+- **YAML frontmatter**: structured metadata (title, date, arxiv ID, tags, etc.)
+- **`## My Notes`**: the user's personal observations
 - **`## LLM Summary`**: concise technical summary of the paper
 - **`## Results`**: structured benchmark results table (PSNR, SSIM, LPIPS)
-- **`## My Notes`**: the user's personal observations
+- **`## Figures`**: key architecture diagrams
 
 ### Step 3: Access full paper content (when the entry is not enough)
 
@@ -125,7 +129,7 @@ python scripts/add_paper.py 2308.04079 --name 3d-gaussian-splatting --summary
 python scripts/add_paper.py 2308.04079 --no-pdf   # skip PDF download (faster)
 ```
 
-This fetches title, date, and authors from arXiv. It also **automatically extracts `website` and `code` URLs** by:
+This fetches title and date from arXiv. It also **automatically extracts `website` and `code` URLs** by:
 1. Parsing the arXiv abstract-page HTML — the "Comments" field often contains explicit project/code links.
 2. Downloading the PDF and extracting all hyperlink annotations (requires `pip install pypdf`).
 
@@ -167,7 +171,6 @@ papers/_template.md  →  papers/YYMM_paper-name.md
 | Field | Format | Notes |
 |---|---|---|
 | `abstract` | Quoted string | **Verbatim abstract from the paper** — copied exactly as written by the authors, not paraphrased |
-| `authors` | List of names | First/last authors for group tracking |
 | `venue` | Free text | `SIGGRAPH 2023`, `CVPR 2024` |
 | `website` | URL | Project page |
 | `code` | URL | GitHub / code repository |
@@ -176,6 +179,10 @@ papers/_template.md  →  papers/YYMM_paper-name.md
 | `compared` | List of filenames (no `.md`) | Papers compared against in experiments |
 
 ### Write sections
+
+#### `## My Notes`
+
+The user's personal observations — leave empty if unknown to the agent.
 
 #### `## LLM Summary`
 
@@ -205,9 +212,9 @@ Structured benchmark results table for cross-paper comparison:
 | tanks-and-temples | 23.14 | 0.841 | 0.183 |
 ```
 
-#### `## My Notes`
+#### `## Figures`
 
-The user's personal observations — leave empty if unknown to the agent.
+Section for embedded diagrams and architecture plots. See "Key figures" below for details on how to store and format these.
 
 ### Validate and rebuild index
 
@@ -236,6 +243,48 @@ Store one architecture/method diagram per paper in `papers/figures/`:
 - Check existing tags in `INDEX.md` before creating duplicates
 
 ## Common Tasks
+
+### "Add a paper to the GTD inbox" (Capture → Engage → Integrate)
+
+The full three-phase workflow for adding and processing a new paper:
+
+#### Phase 1 — CAPTURE (agent-driven)
+
+Run `add_paper.py` to scaffold the entry AND open a GitHub Issue in one step:
+
+```bash
+python scripts/add_paper.py 2308.04079
+# with options:
+python scripts/add_paper.py 2308.04079 --name my-short-name --no-pdf
+```
+
+This will:
+1. Create `papers/YYMM_<name>.md` with title, abstract, authors, extracted links, and top figures.
+2. Open a GitHub Issue titled `[📥 Inbox] <Paper Title>` labeled `inbox` + `to-read`.
+3. Store the issue number in the paper's `issue:` frontmatter field.
+
+After running, also invoke the `populate_paper_metadata` skill to fill in tags.
+
+If `gh` CLI is not installed, issue creation is skipped with a warning. See `README.md` for setup instructions.
+
+#### Phase 2 — ENGAGE (human-driven, on GitHub mobile)
+
+No agent action needed. The user opens the issue on mobile, reads the abstract/figures, leaves comments, and closes the issue when done.
+
+#### Phase 3 — INTEGRATE (automatic via GitHub Actions, or manual)
+
+**Automatic:** GitHub Actions fires when the issue is closed and commits notes back to `main`.
+
+**Manual (if Actions did not run):**
+```bash
+python scripts/sync_issues.py             # sync all closed inbox issues
+python scripts/sync_issues.py --dry-run  # preview without writing
+python scripts/sync_issues.py --issue 42 # sync a specific issue
+```
+
+This patches the `.md` file: appends formatted comments to `## My Notes`, sets `status: read`, clears `issue:`, and rebuilds the index.
+
+---
 
 ### "Add LLM Summary for all papers without one"
 

@@ -4,17 +4,12 @@ date: 2025-11-20
 arxiv: "2511.16454"
 venue:
 status: to-read
-authors:
-  - Doriand Petit
-  - Steve Bourgeois
-  - Vincent Gay-Bellile
-  - Florian Chabot
-  - Loïc Barthe
 
 abstract: "Developing a multi-modal language model capable of understanding 3D scenes remains challenging due to the limited availability of 3D training data, in contrast to the abundance of 2D datasets used for vision-language models (VLM). As an alternative, we introduce LLaVA$^3$ (pronounced LLaVA-Cube), a novel method that improves the 3D scene understanding capabilities of VLM using only multi-view 2D images and without any fine-tuning. Inspired by Cubist painters, who represented multiple viewpoints of a 3D object within a single picture, we propose to describe the 3D scene for the VLM through omnidirectional visual representations of each object. These representations are derived from an intermediate multi-view 3D reconstruction of the scene. Extensive experiments on 3D VQA and 3D language grounding show that our approach outperforms previous 2D-based VLM solutions."
 
-website: https://cea-list.github.io/LLaVA-Cube/
-code: https://github.com/CEA-LIST/LLaVA-Cube/
+website: 
+code: 
+issue: 10
 
 inputs:
   - 
@@ -34,6 +29,8 @@ related:
 compared:
   - 
 ---
+
+## My Notes
 
 ## LLM Summary
 
@@ -88,5 +85,3 @@ compared:
 ![Figure](https://arxiv.org/html/2511.16454/figures/sup-instance.jpg)
 
 *Figure 10: Multi-Scale Instance Segmentation on ScanNet’s scene0086.*
-
-## My Notes

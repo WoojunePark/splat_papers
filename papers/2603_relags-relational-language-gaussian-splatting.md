@@ -4,20 +4,12 @@ date: 2026-03-18
 arxiv: "2603.17605"
 venue:
 status: to-read
-authors:
-  - Yaxu Xie
-  - Abdalla Arafa
-  - Alireza Javanmardi
-  - Christen Millerdurai
-  - Jia Cheng Hu
-  - Shaoxiang Wang
-  - Alain Pagani
-  - Didier Stricker
 
 abstract: "Achieving unified 3D perception and reasoning across tasks such as segmentation, retrieval, and relation understanding remains challenging, as existing methods are either object-centric or rely on costly training for inter-object reasoning. We present a novel framework that constructs a hierarchical language-distilled Gaussian scene and its 3D semantic scene graph without scene-specific training. A Gaussian pruning mechanism refines scene geometry, while a robust multi-view language alignment strategy aggregates noisy 2D features into accurate 3D object embeddings. On top of this hierarchy, we build an open-vocabulary 3D scene graph with Vision Language derived annotations and Graph Neural Network-based relational reasoning. Our approach enables efficient and scalable open-vocabulary 3D reasoning by jointly modeling hierarchical semantics and inter/intra-object relationships, validated across tasks including open-vocabulary segmentation, scene graph generation, and relation-guided retrieval. Project page: this https URL"
 
 website: https://dfki-av.github.io/ReLaGS
-code: 
+code: https://github.com/dfki-av/ReLaGS
+issue: 13
 
 inputs:
   - 
@@ -38,9 +30,9 @@ compared:
   - 
 ---
 
+## My Notes
+
 ## LLM Summary
-
-
 
 ## Results
 
@@ -77,6 +69,3 @@ compared:
 ![Figure](https://arxiv.org/html/2603.17605v1/x7.png)
 
 *Figure 7: Examples of our SoM+LLM scene graph annotation on 2D images from 3DSSG dataset.*
-
-## My Notes
-

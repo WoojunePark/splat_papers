@@ -4,17 +4,12 @@ date: 2025-07-01
 arxiv: "2507.00886"
 venue:
 status: to-read
-authors:
-  - Anna-Maria Halacheva
-  - Jan-Nico Zaech
-  - Xi Wang
-  - Danda Pani Paudel
-  - Luc Van Gool
 
 abstract: "As multimodal language models advance, their application to 3D scene understanding is a fast-growing frontier, driving the development of 3D Vision-Language Models (VLMs). Current methods show strong dependence on object detectors, introducing processing bottlenecks and limitations in taxonomic flexibility. To address these limitations, we propose a scene-centric 3D VLM for 3D Gaussian splat scenes that employs language- and task-aware scene representations. Our approach directly embeds rich linguistic features into the 3D scene representation by associating language with each Gaussian primitive, achieving early modality alignment. To process the resulting dense representations, we introduce a dual sparsifier that distills them into compact, task-relevant tokens via task-guided and location-guided pathways, producing sparse, task-aware global and local scene tokens. Notably, we present the first Gaussian splatting-based VLM, leveraging photorealistic 3D representations derived from standard RGB images, demonstrating strong generalization: it improves performance of prior 3D VLM five folds, in out-of-the-domain settings."
 
 website: https://insait-institute.github.io/gaussianvlm.github.io
-code: 
+code: https://github.com/amhalacheva/GaussianVLM/tree/main
+issue: 7
 
 inputs:
   - 
@@ -35,9 +30,9 @@ compared:
   - 
 ---
 
+## My Notes
+
 ## LLM Summary
-
-
 
 ## Results
 
@@ -90,6 +85,3 @@ compared:
 ![Figure](https://arxiv.org/html/2507.00886/extracted/6586298/supp_fig/LL3DAv3_labels_overlayed_on_counts_True.png)
 
 *Figure 11: Distribution of object count questions (correcly answered by LL3DA, vs all questions) according to object count labels. Overall, 44 questions answered correctly. Logarithmic scaling for the distribution.*
-
-## My Notes
-

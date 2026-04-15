@@ -4,8 +4,6 @@ date: YYYY-MM-DD
 arxiv: ""
 venue:
 status: to-read
-authors:
-  - 
 abstract: ""
 website:
 code:
@@ -23,6 +21,8 @@ compared:
   - 
 ---
 
+## My Notes
+
 ## LLM Summary
 
 ## Results
@@ -35,4 +35,4 @@ compared:
 | tanks-and-temples | 23.14 | 0.841 | 0.183 |
 -->
 
-## My Notes
+## Figures

@@ -4,19 +4,12 @@ date: 2025-10-18
 arxiv: "2510.16410"
 venue:
 status: to-read
-authors:
-  - Changyue Shi
-  - Minghao Chen
-  - Yiping Mao
-  - Chuxiao Yang
-  - Xinyuan Hu
-  - Jiajun Ding
-  - Zhou Yu
 
 abstract: "Bridging the gap between complex human instructions and precise 3D object grounding remains a significant challenge in vision and robotics. Existing 3D segmentation methods often struggle to interpret ambiguous, reasoning-based instructions, while 2D vision-language models that excel at such reasoning lack intrinsic 3D spatial understanding. In this paper, we introduce REALM, an innovative MLLM-agent framework that enables open-world reasoning-based segmentation without requiring extensive 3D-specific post-training. We perform segmentation directly on 3D Gaussian Splatting representations, capitalizing on their ability to render photorealistic novel views that are highly suitable for MLLM comprehension. As directly feeding one or more rendered views to the MLLM can lead to high sensitivity to viewpoint selection, we propose a novel Global-to-Local Spatial Grounding strategy. Specifically, multiple global views are first fed into the MLLM agent in parallel for coarse-level localization, aggregating responses to robustly identify the target object. Then, several close-up novel views of the object are synthesized to perform fine-grained local segmentation, yielding accurate and consistent 3D masks. Extensive experiments show that REALM achieves remarkable performance in interpreting both explicit and implicit instructions across LERF, 3D-OVS, and our newly introduced REALM3D benchmarks. Furthermore, our agent framework seamlessly supports a range of 3D interaction tasks, including object removal, replacement, and style transfer, demonstrating its practical utility and versatility. Project page: this https URL."
 
 website: https://ChangyueShi.github.io/REALM
-code: 
+code: https://github.com/ChangyueShi/REALM-Code
+issue: 1
 
 inputs:
   - 
@@ -37,9 +30,9 @@ compared:
   - 
 ---
 
+## My Notes
+
 ## LLM Summary
-
-
 
 ## Results
 
@@ -80,6 +73,3 @@ compared:
 ![Figure](https://arxiv.org/html/2510.16410v3/x8.png)
 
 *Figure 8: Ablation study on GLSpaG. The local grounding stage refines the 3D segmentation results.*
-
-## My Notes
-
