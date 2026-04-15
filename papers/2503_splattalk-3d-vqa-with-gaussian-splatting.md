@@ -32,6 +32,10 @@ compared:
 
 ## My Notes
 
+### 왜 기존 2D 이미지(와 거기서 뽑은 token만으로는 한계가 있는가)
+
+More recent work  [23] has demonstrated the power of LLMs to answer VQA questions using only a sampling of tokens extracted from images, without any underlying 3D representation. While this approach is inspiring, it relies upon the LLM to make sense of a set of tokens that are arranged according to images rather than elements in the 3D scene. As a result, it struggles to answer queries about specific 3D locations (e.g., “What is here?”) and questions requiring a holistic understanding of the entire 3D scene, where the answer depends on establishing correspondences between objects across multiple images (e.g., “What is opposite the door at the other end of the room”?). In this work, we aim to address these issues by consolidating tokens in 3D before providing them to the LLM.
+
 ## LLM Summary
 
 ## Results

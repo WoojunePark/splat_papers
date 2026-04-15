@@ -12,13 +12,20 @@ code: https://github.com/Jumpat/SegAnyGAussians.git
 issue: 
 
 inputs:
-  - 
+  - posed
+  - multi-view
+  - images
+  - 2d-pointing
 
 outputs:
-  - 
+  - fast
+  - 3d-segmentation
 
 methods:
-  - 
+  - sam2d
+  - feature-per-splat
+  - scale-aware
+  - clip
 
 benchmarks:
   - 
@@ -32,33 +39,20 @@ compared:
 
 ## My Notes
 
-
 **[Note from GitHub, 2026-04-15]**
-> ## inputs
-> - posed
-> - multi-view
-> - images
-> - 2D-pointing
->
-> ## outputs
-> - fast
-> - 3D-segmentation
->
-> ## methods
-> - SAM2D
-> - feature-per-splat
-> - scale-aware
-> - CLIP
->
->
-> 1. 빠른 속도?
-> GS 복원하면서 splat 단위로 feature를 미리 만들어두었다면, 사실상 그때 segmentation 다 한 거 아닌가?
-> 4ms의 빠른 inference 속도는, 씬 전체에 대한 이해하는 과정이 생략되어서 빠른 거 아닐까?
->
-> 2. Trick들
-> 2-1. Scale 관련: Splat들이 크기가 튀는 경우가 빈번해서 크기가 큰 outlier들을 적절히 거르는 기법들 적용 (Scale-Gated Affinity Features, Local Feature Smoothing, Scale-Aware Contrastive Learning)
-> 2-2. Data imbalance
-> 2-3. Open set: CLIP 쓰면 가능
+
+1. 빠른 속도?
+GS 복원하면서 splat 단위로 feature를 미리 만들어두었다면, 사실상 그때 segmentation 다 한 거 아닌가?
+4ms의 빠른 inference 속도는, 씬 전체에 대한 이해하는 과정이 생략되어서 빠른 거 아닐까?
+
+2. Trick들
+
+    2-1. Scale 관련: Splat들이 크기가 튀는 경우가 빈번해서 크기가 큰 outlier들을 적절히 거르는 기법들 적용 (Scale-Gated Affinity Features, Local Feature Smoothing, Scale-Aware Contrastive Learning)
+
+    2-2. Data imbalance
+
+    2-3. Open set: CLIP 쓰면 가능
+
 ## LLM Summary
 
 ## Results

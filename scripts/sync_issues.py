@@ -167,7 +167,7 @@ def _append_to_my_notes(text: str, new_lines: list[str]) -> str:
     notes_pattern = re.compile(r'^## My Notes\s*$', re.MULTILINE)
     m = notes_pattern.search(text)
 
-    block = "\n".join(new_lines)
+    block = "\n\n".join(new_lines)
 
     if m:
         insert_pos = m.end()
@@ -362,9 +362,65 @@ def format_comment(comment: dict) -> str:
         except Exception:
             date_str = created[:10]
     prefix = f"**[Note from GitHub{', ' + date_str if date_str else ''}]**"
-    # Indent body lines for readability
-    indented = "\n".join(f"> {ln}" if ln.strip() else ">" for ln in body.splitlines())
-    return f"{prefix}\n{indented}"
+    
+    # Remove blockquotes for cleaner notes
+    lines = body.splitlines()
+    stripped_lines = []
+    for line in lines:
+        s = line.strip()
+        if s.startswith('>'):
+             stripped_lines.append(s[1:].strip())
+        else:
+             stripped_lines.append(s)
+             
+    body = "\n".join(stripped_lines)
+    
+    lines = body.splitlines()
+    out_lines = []
+    
+    sub_level_re = re.compile(r'^\s*([0-9]+[-.][0-9]+[.)]?)\s+(.*)')
+    top_level_re = re.compile(r'^\s*([0-9]+[.)])\s+(.*)')
+    bullet_re = re.compile(r'^\s*([-*])\s+(.*)')
+    
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            out_lines.append("")
+            continue
+            
+        m_sub = sub_level_re.match(line)
+        m_bullet = bullet_re.match(line)
+        
+        if m_sub:
+            if out_lines and out_lines[-1].strip() != "":
+                out_lines.append("")
+            list_prefix = m_sub.group(1)
+            content = m_sub.group(2)
+            out_lines.append(f"    {list_prefix} {content}")
+        elif m_bullet:
+            list_prefix = m_bullet.group(1)
+            content = m_bullet.group(2)
+            out_lines.append(f"    {list_prefix} {content}")
+        else:
+            m_top = top_level_re.match(line)
+            if m_top:
+                if out_lines and out_lines[-1].strip() != "":
+                    out_lines.append("")
+                list_prefix = m_top.group(1)
+                content = m_top.group(2)
+                out_lines.append(f"{list_prefix} {content}")
+            else:
+                out_lines.append(line)
+                
+    final_lines = []
+    for line in out_lines:
+        line_stripped = line.strip()
+        if line_stripped == "" and (not final_lines or final_lines[-1].strip() == ""):
+            continue
+        final_lines.append(line.rstrip())
+
+    formatted_body = "\n".join(final_lines).strip()
+    return f"{prefix}\n\n{formatted_body}"
 
 
 # ---------------------------------------------------------------------------

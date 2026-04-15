@@ -605,7 +605,7 @@ def create_github_issue(
         return 0
 
     title = meta.get("title", arxiv_id)
-    issue_title = f"[📥 Inbox] {title}"
+    issue_title = title
     body = _build_issue_body(arxiv_id, meta, website, code, figures)
 
     # Ensure labels exist before using them (gh creates labels implicitly on GitHub,
@@ -613,7 +613,6 @@ def create_github_issue(
     # We attempt creation and silently ignore errors (label may already exist).
     for label_spec in [
         ("inbox", "Inbox — paper added, not yet read", "0075ca"),
-        ("to-read", "Paper queued for reading", "e4e669"),
     ]:
         try:
             subprocess.run(
@@ -631,7 +630,6 @@ def create_github_issue(
              "--title", issue_title,
              "--body", body,
              "--label", "inbox",
-             "--label", "to-read",
              "--assignee", "@me"],
             capture_output=True, text=True, check=True,
         )
@@ -687,6 +685,11 @@ def main() -> None:
 
     args = parser.parse_args()
     arxiv_id = args.arxiv_id.strip()
+
+    # Extract arXiv ID if a full URL was provided
+    m = re.search(r"(\d{4}\.\d{4,5}(?:v\d+)?)", arxiv_id)
+    if m and ("arxiv.org" in arxiv_id or "http" in arxiv_id or "/" in arxiv_id):
+        arxiv_id = m.group(1)
 
     # Validate arXiv ID format
     if not re.match(r"^\d{4}\.\d{4,5}(v\d+)?$", arxiv_id):
