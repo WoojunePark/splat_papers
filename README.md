@@ -9,7 +9,7 @@ A structured, LLM-friendly knowledge base for Gaussian Splatting research papers
 ## Why
 
 - **LLM-native**: Every paper is a self-contained `.md` file with YAML frontmatter — feed directly into any LLM as context
-- **Git-synced**: Private GitHub repo, works from any machine, no Notion dependency
+- **Git-synced**: A GitHub repo, works from any machine, no Notion dependency
 - **Filterable**: Tag-based system for inputs, outputs, methods, and benchmarks
 - **GTD inbox**: New papers land in your GitHub Issues feed so you can read on mobile — close the issue when done, notes sync back automatically
 
