@@ -760,6 +760,25 @@ def main() -> None:
     print(f"\nCreated: {filepath}")
     if issue_number:
         print(f"GitHub Issue #{issue_number} opened — check GitHub mobile to read on the go.")
+
+    # ------------------------------------------------------------------
+    # 6. Rebuild INDEX.md automatically
+    # ------------------------------------------------------------------
+    build_index_script = script_dir / "build_index.py"
+    if build_index_script.exists():
+        print("\nRebuilding index ...")
+        try:
+            subprocess.run(
+                [sys.executable, str(build_index_script)],
+                check=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            print(f"[warn] build_index.py exited with code {exc.returncode} — index may be stale.")
+        except Exception as exc:
+            print(f"[warn] Could not run build_index.py: {exc}")
+    else:
+        print("[warn] build_index.py not found — skipping index rebuild.")
+
     print("\nNext steps:")
     print(f"  1. Edit {filename} - fill in tags, venue")
     if not website:
@@ -767,9 +786,8 @@ def main() -> None:
     if not code:
         print("  3. Manually add code URL (not found automatically)")
     print("  4. Run: python scripts/validate.py")
-    print("  5. Run: python scripts/build_index.py")
     if issue_number:
-        print(f"  6. When done reading: close GitHub Issue #{issue_number}")
+        print(f"  5. When done reading: close GitHub Issue #{issue_number}")
         print("     → sync_issues.py will sync your comments back to '## My Notes'")
 
 
