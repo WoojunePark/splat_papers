@@ -3,13 +3,13 @@ title: "Segment Any 3D Gaussians"
 date: 2023-12-01
 arxiv: "2312.00860"
 venue:
-status: to-read
+status: read
 
 abstract: "This paper presents SAGA (Segment Any 3D GAussians), a highly efficient 3D promptable segmentation method based on 3D Gaussian Splatting (3D-GS). Given 2D visual prompts as input, SAGA can segment the corresponding 3D target represented by 3D Gaussians within 4 ms. This is achieved by attaching an scale-gated affinity feature to each 3D Gaussian to endow it a new property towards multi-granularity segmentation. Specifically, a scale-aware contrastive training strategy is proposed for the scale-gated affinity feature learning. It 1) distills the segmentation capability of the Segment Anything Model (SAM) from 2D masks into the affinity features and 2) employs a soft scale gate mechanism to deal with multi-granularity ambiguity in 3D segmentation through adjusting the magnitude of each feature channel according to a specified 3D physical scale. Evaluations demonstrate that SAGA achieves real-time multi-granularity segmentation with quality comparable to state-of-the-art methods. As one of the first methods addressing promptable segmentation in 3D-GS, the simplicity and effectiveness of SAGA pave the way for future advancements in this field. Our code will be released."
 
 website: https://jumpat.github.io/SAGA
 code: https://github.com/Jumpat/SegAnyGAussians.git
-issue: 2
+issue: 
 
 inputs:
   - 
@@ -32,6 +32,33 @@ compared:
 
 ## My Notes
 
+
+**[Note from GitHub, 2026-04-15]**
+> ## inputs
+> - posed
+> - multi-view
+> - images
+> - 2D-pointing
+>
+> ## outputs
+> - fast
+> - 3D-segmentation
+>
+> ## methods
+> - SAM2D
+> - feature-per-splat
+> - scale-aware
+> - CLIP
+>
+>
+> 1. 빠른 속도?
+> GS 복원하면서 splat 단위로 feature를 미리 만들어두었다면, 사실상 그때 segmentation 다 한 거 아닌가?
+> 4ms의 빠른 inference 속도는, 씬 전체에 대한 이해하는 과정이 생략되어서 빠른 거 아닐까?
+>
+> 2. Trick들
+> 2-1. Scale 관련: Splat들이 크기가 튀는 경우가 빈번해서 크기가 큰 outlier들을 적절히 거르는 기법들 적용 (Scale-Gated Affinity Features, Local Feature Smoothing, Scale-Aware Contrastive Learning)
+> 2-2. Data imbalance
+> 2-3. Open set: CLIP 쓰면 가능
 ## LLM Summary
 
 ## Results
