@@ -82,6 +82,7 @@ def _parse_scalar(value: str):
 # ---------------------------------------------------------------------------
 
 REQUIRED_FIELDS = ["title", "date", "arxiv", "status", "inputs", "outputs", "methods"]
+TAG_FIELDS_ALLOW_EMPTY = {"inputs", "outputs", "methods"}  # empty is OK (fill later via populate_paper_metadata)
 OPTIONAL_LIST_FIELDS = ["benchmarks", "related", "compared"]
 VALID_STATUSES = {"read", "skimmed", "to-read"}
 TAG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$")
@@ -89,8 +90,8 @@ FILENAME_PATTERN = re.compile(r"^\d{4}_.+\.md$")
 REQUIRED_SECTIONS = ["## My Notes", "## LLM Summary"]
 
 
-def validate_paper(filepath: Path, all_paper_stems: set[str] | None = None) -> list[str]:
-    """Validate a single paper file. Returns list of error messages.
+def validate_paper(filepath: Path, all_paper_stems: set[str] | None = None) -> tuple[list[str], list[str]]:
+    """Validate a single paper file. Returns (errors, warnings).
 
     Args:
         filepath: Path to the paper .md file.
@@ -107,14 +108,18 @@ def validate_paper(filepath: Path, all_paper_stems: set[str] | None = None) -> l
 
     if not meta:
         errors.append("No YAML frontmatter found")
-        return errors
+        return errors, []
 
     # Required fields
+    warnings = []
     for field in REQUIRED_FIELDS:
         if field not in meta:
             errors.append(f"Missing required field: {field}")
         elif isinstance(meta[field], list) and not any(meta[field]):
-            errors.append(f"Field '{field}' is an empty list")
+            if field not in TAG_FIELDS_ALLOW_EMPTY:
+                errors.append(f"Field '{field}' is an empty list")
+            else:
+                warnings.append(f"Field '{field}' is empty (run populate_paper_metadata to fill)")
         elif isinstance(meta[field], str) and not meta[field]:
             errors.append(f"Field '{field}' is empty")
 
@@ -166,7 +171,7 @@ def validate_paper(filepath: Path, all_paper_stems: set[str] | None = None) -> l
                         f"Reference '{ref}' in {ref_field} not found in papers/"
                     )
 
-    return errors
+    return errors, warnings
 
 
 # ---------------------------------------------------------------------------
@@ -198,26 +203,32 @@ def main():
     total_files = len(md_files)
 
     for md_file in md_files:
-        errors = validate_paper(md_file, all_paper_stems)
-        if errors:
+        errors, soft_warnings = validate_paper(md_file, all_paper_stems)
+        if errors or soft_warnings:
             # Separate cross-ref warnings from hard errors
             hard_errors = [e for e in errors if "not found in papers/" not in e]
             xref_warnings = [e for e in errors if "not found in papers/" in e]
 
+            any_issue = hard_errors or xref_warnings or soft_warnings
             if hard_errors:
                 print(f"\nFAIL {md_file.name}")
                 for err in hard_errors:
                     print(f"    ERROR: {err}")
                 total_errors += len(hard_errors)
+            elif any_issue:
+                print(f"\nWARN {md_file.name}")
 
             if xref_warnings:
-                if not hard_errors:
-                    print(f"\nWARN {md_file.name}")
                 for w in xref_warnings:
                     print(f"    XREF:  {w}")
                 total_warnings += len(xref_warnings)
 
-            if not hard_errors and not xref_warnings:
+            if soft_warnings:
+                for w in soft_warnings:
+                    print(f"    WARN:  {w}")
+                total_warnings += len(soft_warnings)
+
+            if not any_issue:
                 print(f"OK   {md_file.name}")
         else:
             print(f"OK   {md_file.name}")
