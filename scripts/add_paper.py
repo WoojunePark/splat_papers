@@ -197,13 +197,36 @@ def extract_figures_from_arxiv_html(arxiv_id: str) -> list[dict]:
 
     figures = []
     # Find all <figure> tags
-    figure_blocks = re.findall(r'<figure.*?>(.*?)</figure>', html, re.DOTALL | re.IGNORECASE)
-    for block in figure_blocks:
+    figure_blocks = list(re.finditer(r'<figure.*?>.*?</figure>', html, re.DOTALL | re.IGNORECASE))
+    for match in figure_blocks:
+        block = match.group(0)
+        
+        # Extract caption
+        caption_match = re.search(r'<figcaption.*?>(.*?)</figcaption>', block, re.DOTALL | re.IGNORECASE)
+        caption = ""
+        if caption_match:
+            # Strip HTML tags
+            caption = re.sub(r'<[^>]+>', '', caption_match.group(1))
+            # Clean up whitespace
+            caption = re.sub(r'\s+', ' ', caption).strip()
+            
         # Extract img src
         img_match = re.search(r'<img[^>]*src=["\']([^"\']+)["\']', block, re.IGNORECASE)
-        if not img_match:
+        src = ""
+        if img_match:
+            src = img_match.group(1)
+        else:
+            # If no img in the block, it might be a teaser figure where the <img> 
+            # is placed right before the <figure> block in HTML.
+            # Only look backwards if it's explicitly labeled as a Figure to avoid duplicates for Tables.
+            if re.search(r'^(Figure|Fig\.)', caption, re.IGNORECASE):
+                preceding_html = html[:match.start()]
+                imgs_before = re.findall(r'<img[^>]*src=["\']([^"\']+)["\']', preceding_html, re.IGNORECASE)
+                if imgs_before:
+                    src = imgs_before[-1] # nearest one
+                    
+        if not src:
             continue
-        src = img_match.group(1)
         
         # Build full URL if relative
         if not src.startswith("http"):
@@ -213,15 +236,6 @@ def extract_figures_from_arxiv_html(arxiv_id: str) -> list[dict]:
                 src = f"https://arxiv.org/html/{src}"
             else:
                 src = f"https://arxiv.org/html/{arxiv_id}/{src}"
-
-        # Extract caption
-        caption_match = re.search(r'<figcaption.*?>(.*?)</figcaption>', block, re.DOTALL | re.IGNORECASE)
-        caption = ""
-        if caption_match:
-            # Strip HTML tags
-            caption = re.sub(r'<[^>]+>', '', caption_match.group(1))
-            # Clean up whitespace
-            caption = re.sub(r'\s+', ' ', caption).strip()
         
         figures.append({"src": src, "caption": caption})
     
