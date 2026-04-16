@@ -228,6 +228,28 @@ def extract_figures_from_arxiv_html(arxiv_id: str) -> list[dict]:
     return figures
 
 
+def extract_alphaxiv_summary(arxiv_id: str) -> str:
+    """Check alphaxiv.org for a pre-generated LLM summary."""
+    url = f"https://alphaxiv.org/overview/{arxiv_id}.md"
+    print(f"  Checking alphaXiv for summary: {url} ...")
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "splat-papers-bot/1.0"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            text = resp.read().decode("utf-8").strip()
+            if text and not text.startswith("<!DOCTYPE html>"):
+                # Clean up the redundant top-level header provided by alphaXiv
+                text = re.sub(r"^##\s+Research Report[^\n]*\n+", "", text)
+                return text.strip()
+    except urllib.error.URLError as exc:
+        if hasattr(exc, 'code') and exc.code == 404:
+            print("  [info] alphaXiv summary not found (404).")
+        else:
+            print(f"  [warn] alphaXiv summary fetch failed: {exc}")
+    except Exception as exc:
+        print(f"  [warn] alphaXiv summary fetch unexpected error: {exc}")
+    
+    return ""
+
 
 def extract_links_from_pdf(arxiv_id: str) -> list[tuple[int, str]]:
     """
@@ -462,12 +484,10 @@ def generate_paper_md(
         "  - ",
         "---",
         "",
+        f"# {title}",
+        "",
         "## My Notes",
         "",
-        "",
-        "## LLM Summary",
-        "",
-        llm_summary,
         "",
         "## Results",
         "",
@@ -491,6 +511,11 @@ def generate_paper_md(
             lines.append("")
             lines.append(f"*{caption}*")
             lines.append("")
+
+    lines.append("## LLM Summary")
+    lines.append("")
+    lines.append(llm_summary)
+    lines.append("")
 
     return "\n".join(lines)
 
@@ -773,7 +798,14 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 5. Generate and write the paper entry
     # ------------------------------------------------------------------
-    summary_text = meta.get("abstract", "") if args.summary else ""
+    print("\nFetching alphaXiv summary ...")
+    alphaxiv_summary = extract_alphaxiv_summary(arxiv_id)
+    
+    if alphaxiv_summary:
+        summary_text = alphaxiv_summary
+    else:
+        summary_text = meta.get("abstract", "") if args.summary else ""
+
     content = generate_paper_md(
         arxiv_id, meta, website, code, summary_text, figures, issue_number
     )

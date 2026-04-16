@@ -23,8 +23,6 @@ compared:
 
 ## My Notes
 
-## LLM Summary
-
 ## Results
 
 <!-- Optional: structured benchmark results for cross-paper comparison -->
@@ -36,3 +34,6 @@ compared:
 -->
 
 ## Figures
+
+## LLM Summary
+
