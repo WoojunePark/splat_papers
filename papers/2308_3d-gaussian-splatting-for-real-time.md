@@ -10,14 +10,14 @@ website: https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting
 code: https://github.com/graphdeco-inria/gaussian-splatting
 
 inputs:
-  - 
+  - posed-multi-view-images
+  - point-cloud
 
 outputs:
-  - 
-
+  - 3dgs
+  
 methods:
-  - 
-
+  
 benchmarks:
   - 
 
@@ -28,9 +28,9 @@ compared:
   - 
 ---
 
-## My Notes
+# 3D Gaussian Splatting for Real-Time Radiance Field Rendering
 
-## LLM Summary
+## My Notes
 
 ## Results
 
@@ -41,3 +41,18 @@ compared:
 | mipnerf360 | 27.21 | 0.815 | 0.214 |
 | tanks-and-temples | 23.14 | 0.841 | 0.183 |
 -->
+
+## Figures
+
+## LLM Summary
+
+## Introduction
+
+Neural Radiance Fields (NeRFs) have revolutionized the field of novel view synthesis by enabling photorealistic rendering from a set of input images. However, the computational demands of NeRFs have limited their practical application in real-time scenarios. The paper "3D Gaussian Splatting for Real-Time Radiance Field Rendering" introduces a groundbreaking approach that achieves real-time rendering speeds while maintaining high visual quality.
+
+![Comparison of different radiance field methods showing rendering performance](https://paper-assets.alphaxiv.org/figures/2308.04079/img-0.jpeg)
+*Figure 1: Comparison of different radiance field rendering methods. From left to right: InstantNGP, Plenoxels, Mip-NeRF360, 3D Gaussian Splatting (Ours) with two different training configurations, and Ground Truth. Note the significant frame rate advantages of the proposed method while maintaining high PSNR values.*
+
+The work, conducted by researchers from Inria and Université Côte d'Azur in France, along with collaborators from the Max-Planck-Institut für Informatik in Germany, presents a novel representation based on 3D Gaussians that are rendered through a fast, differentiable splatting algorithm.
+
+> *Auto-generated summary. Do not edit manually.*
