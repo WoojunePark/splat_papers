@@ -48,9 +48,9 @@ Each `papers/YYMM_*.md` file is self-contained with:
 
 - **YAML frontmatter**: structured metadata (title, date, arxiv ID, tags, etc.)
 - **`## My Notes`**: the user's personal observations
-- **`## LLM Summary`**: concise technical summary of the paper
 - **`## Results`**: structured benchmark results table (PSNR, SSIM, LPIPS)
 - **`## Figures`**: key architecture diagrams
+- **`## LLM Summary`**: concise technical summary of the paper
 
 ### Step 3: Access full paper content (when the entry is not enough)
 
@@ -130,6 +130,7 @@ python scripts/add_paper.py 2308.04079 --no-pdf   # skip PDF download (faster)
 ```
 
 This fetches title and date from arXiv. It also **automatically extracts `website` and `code` URLs** by:
+
 1. Parsing the arXiv abstract-page HTML — the "Comments" field often contains explicit project/code links.
 2. Downloading the PDF and extracting all hyperlink annotations (requires `pip install pypdf`).
 
@@ -189,6 +190,7 @@ The user's personal observations — leave empty if unknown to the agent.
 This section uses a **fixed heading** (`## LLM Summary`) so scripts can target it.
 
 > **`abstract` vs `## LLM Summary`**: These are distinct and must not be confused.
+>
 > - `abstract` (frontmatter field) — the **verbatim abstract text as written by the paper's authors**. Copy it exactly from the ArXiv abstract page or paper PDF. Do not paraphrase.
 > - `## LLM Summary` (body section) — an **LLM-generated technical summary** written in third person with structured bullet points. This is the agent's interpretation and analysis of the paper, not the authors' words.
 
@@ -249,6 +251,7 @@ All tags **must** be lowercase kebab-case:
 ### Auto-normalisation (sync_issues.py)
 
 When tags come in via GitHub Issue comments, `sync_issues.py` **automatically normalises** them:
+
 - `Multi_View` → `multi-view`
 - `3DGS` → `3dgs`
 - `posed multi view images` → `posed-multi-view-images`
@@ -298,6 +301,7 @@ python scripts/add_paper.py 2308.04079 --name my-short-name --no-pdf
 ```
 
 This will:
+
 1. Create `papers/YYMM_<name>.md` with title, abstract, authors, extracted links, and top figures.
 2. Open a GitHub Issue titled `[📥 Inbox] <Paper Title>` labeled `inbox` + `to-read`.
 3. Store the issue number in the paper's `issue:` frontmatter field.
@@ -333,6 +337,7 @@ These are my reading notes — goes to ## My Notes.
 **Automatic:** GitHub Actions fires when the issue is closed and commits notes back to `main`.
 
 **Manual (if Actions did not run):**
+
 ```bash
 python scripts/sync_issues.py             # sync all closed inbox issues
 python scripts/sync_issues.py --dry-run  # preview without writing
@@ -371,15 +376,20 @@ Use this task to batch-write proper LLM Summaries for any paper entries that hav
 2. **For each paper in the list**:
 
    a. Fetch the ArXiv HTML via `read_url_content` (preferred — most content):
+
       ```
       https://arxiv.org/html/{arxiv_id}
       ```
+
    b. If the HTML version doesn't exist (404 / no content), fall back:
+
       ```
       https://arxiv.org/abs/{arxiv_id}
       ```
+
    c. Write the `## LLM Summary` section in the paper's `.md` file following the guidelines below.
    d. End the summary with the auto-generated marker:
+
       ```
       > *Auto-generated summary. Do not edit manually.*
       ```
@@ -392,6 +402,7 @@ Use this task to batch-write proper LLM Summaries for any paper entries that hav
    - Target length: 100–200 words
 
 4. **After updating all papers**:
+
    ```bash
    python scripts/validate.py
    python scripts/build_index.py
