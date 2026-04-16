@@ -231,31 +231,125 @@ See [INDEX.md](INDEX.md) for the full tag listing and paper relationship graph.
 
 ## Scripts
 
-| Script | Phase | Purpose |
+### How the Scripts Relate
+
+```mermaid
+flowchart TD
+    %% ── Entry points ────────────────────────────────────────────────────
+    A([fa:fa-user You])
+
+    subgraph CAPTURE ["① Capture — add a paper"]
+        B["add_paper.py\n─────────────────\n· Fetches arXiv metadata\n· Extracts figures\n· Looks up website / code / OpenReview\n· Scaffolds papers/YYMM_*.md\n· Opens GitHub Issue (inbox label)"]
+    end
+
+    subgraph BACKFILL ["📡 Backfill (optional)"]
+        C["populate_urls.py\n─────────────────\n· For existing papers missing\n  website / code / openreview\n· Re-uses helpers from add_paper.py"]
+    end
+
+    subgraph READ ["② Engage — read on GitHub mobile"]
+        D["GitHub Issue\n(inbox label)\n─────────────────\n· Abstract + figures\n· You comment notes\n· You close issue when done"]
+    end
+
+    subgraph INTEGRATE ["③ Integrate — sync notes back"]
+        E["sync_issues.py\n─────────────────\n· Reads closed inbox issues via gh\n· Parses ## inputs / outputs / methods\n  structured sections → YAML tags\n· Appends free-form text → ## My Notes\n· Sets status: read, clears issue:"]
+        F["tag_utils.py  (library)\n─────────────────\n· normalize_tag() — kebab-case\n· load_known_tags() — scans papers/\n· correct_tags() — fuzzy typo fix\n(imported by sync_issues.py\nand validate.py)"]
+        E --> |"uses"| F
+    end
+
+    subgraph INDEX ["🗂 Indexing & Validation"]
+        G["validate.py\n─────────────────\n· Checks required YAML fields\n· Validates tag format (kebab-case)\n· Cross-refs related / compared\n· Exits non-zero on errors (CI gate)"]
+        H["build_index.py\n─────────────────\n· Reads all papers/ frontmatter\n· Generates INDEX.md table\n· Generates tags/*.md pages\n· Generates Mermaid relationship graph"]
+    end
+
+    subgraph QUERY ["🔍 Query / LLM pipe"]
+        I["query.py\n─────────────────\n· Filters by --input / --output /\n  --method / --benchmark / --status /\n  --after / --before / --title\n· Outputs full .md content for piping\n  into any LLM context window"]
+        J["needs_metadata.py\n─────────────────\n· Finds papers whose ## LLM Summary\n  is empty or unstructured\n· --json output for agent use"]
+    end
+
+    subgraph CI ["⚙ GitHub Actions (automatic)"]
+        K["validate.yml\n(on push to papers/ or scripts/)"]
+        L["sync_issues.yml\n(on issue closed with 'inbox' label)"]
+    end
+
+    %% ── Edges ───────────────────────────────────────────────────────────
+    A -->|"python scripts/add_paper.py &lt;id&gt;"| CAPTURE
+    A -->|"python scripts/populate_urls.py"| BACKFILL
+    CAPTURE -->|"creates paper .md\nopens GitHub Issue"| READ
+    BACKFILL -->|"patches missing URLs\nin existing .md files"| READ
+
+    READ -->|"you close the issue"| L
+    L -->|"runs"| E
+    E -->|"after sync, calls"| G
+    E -->|"after sync, calls"| H
+
+    A -->|"python scripts/sync_issues.py"| INTEGRATE
+    INTEGRATE -->|"after sync, auto-calls"| G
+    INTEGRATE -->|"after sync, auto-calls"| H
+
+    A -->|"python scripts/validate.py"| G
+    A -->|"python scripts/build_index.py"| H
+    K -->|"runs"| G
+    K -->|"runs"| H
+
+    A -->|"python scripts/query.py ..."| I
+    A -->|"python scripts/needs_metadata.py"| J
+
+    %% ── Styling ─────────────────────────────────────────────────────────
+    classDef phase fill:#1e3a5f,stroke:#4a9eff,color:#e0f0ff
+    classDef tool  fill:#1a3828,stroke:#4caf7d,color:#d0ffe8
+    classDef lib   fill:#2d2215,stroke:#c8953a,color:#fff3dc
+    classDef ci    fill:#2e1a3a,stroke:#9c6fca,color:#f0e0ff
+    classDef actor fill:#3a1a1a,stroke:#e05555,color:#ffe0e0
+
+    class CAPTURE,READ,INTEGRATE phase
+    class B,C,E,G,H,I,J tool
+    class F lib
+    class K,L ci
+    class A actor
+```
+
+### Script Reference
+
+| Script | When to run | What it does |
 |---|---|---|
-| `scripts/add_paper.py` | Capture | Creates a paper entry from an arXiv ID + opens GitHub Issue |
-| `scripts/sync_issues.py` | Integrate | Syncs closed inbox issues → `## My Notes` |
-| `scripts/needs_metadata.py` | — | Lists papers missing metadata or a proper LLM Summary |
-| `scripts/query.py` | — | Filters papers and outputs content for LLM piping |
-| `scripts/build_index.py` | — | Generates `INDEX.md`, tag pages, and relationship graph |
-| `scripts/validate.py` | — | Validates frontmatter schema with cross-reference checks |
+| `add_paper.py` | **Capture** — once per new paper | Fetches arXiv metadata, extracts figures, looks up website / code / OpenReview, scaffolds the `.md` file, opens a GitHub Issue |
+| `populate_urls.py` | **Backfill** — on existing papers | Re-runs URL extraction for papers that are missing `website`, `code`, or `openreview` fields; imports helpers from `add_paper.py` |
+| `sync_issues.py` | **Integrate** — after reading | Reads closed inbox issues via `gh`, parses structured `## inputs/outputs/methods` sections into YAML tags, appends free-form text to `## My Notes`, then auto-calls `validate.py` + `build_index.py` |
+| `tag_utils.py` | *(library — not run directly)* | Shared tag normalisation (`normalize_tag`), known-tag loading (`load_known_tags`), and fuzzy typo correction (`correct_tags`); imported by `sync_issues.py` and `validate.py` |
+| `validate.py` | **CI gate** + manual check | Validates frontmatter schema, tag kebab-case format, arXiv ID pattern, cross-references (`related`/`compared`); exits non-zero on errors |
+| `build_index.py` | **After any paper change** | Reads all frontmatter, generates `INDEX.md` master table + per-tag pages under `tags/` + Mermaid relationship graph |
+| `query.py` | **On-demand** — LLM workflows | Filters papers by input/output/method/benchmark/status/date/title; outputs full `.md` content for piping into an LLM |
+| `needs_metadata.py` | **On-demand** — agent workflows | Lists papers whose `## LLM Summary` is empty or unstructured; use `--json` for agent-friendly output |
+
+### Typical Invocations
 
 ```bash
-# Capture
-python scripts/add_paper.py 2308.04079 --summary
+# ── Capture ──────────────────────────────────────────────────────────
+python scripts/add_paper.py 2308.04079               # basic capture
+python scripts/add_paper.py 2308.04079 --summary     # also fetch alphaXiv summary
+python scripts/add_paper.py 2308.04079 --no-issue    # skip GitHub Issue creation
 
-# Integrate (manually)
-python scripts/sync_issues.py
+# ── Backfill URLs for existing papers ────────────────────────────────
+python scripts/populate_urls.py                      # all papers missing URLs
+python scripts/populate_urls.py --no-pdf             # faster, skip PDF extraction
 
-# Query papers
+# ── Integrate (manual) ───────────────────────────────────────────────
+python scripts/sync_issues.py                        # sync all closed inbox issues
+python scripts/sync_issues.py --dry-run              # preview without writing
+python scripts/sync_issues.py --issue 42             # sync one specific issue
+
+# ── Validate & index ─────────────────────────────────────────────────
+python scripts/validate.py                           # validate all papers
+python scripts/build_index.py                        # regenerate INDEX.md + tags/
+
+# ── Query / LLM pipe ─────────────────────────────────────────────────
 python scripts/query.py --method 3dgs --status read
 python scripts/query.py --input multi-view-images --list
+python scripts/query.py --after 2024-01-01 | llm "Summarise these papers"
 
-# Validate all papers
-python scripts/validate.py
-
-# Rebuild index and tag pages
-python scripts/build_index.py
+# ── Agent helpers ─────────────────────────────────────────────────────
+python scripts/needs_metadata.py                     # show papers missing summaries
+python scripts/needs_metadata.py --json              # JSON output for agent use
 ```
 
 ---
@@ -277,12 +371,14 @@ splat_papers/
 │   ├── method--tag-name.md
 │   └── benchmark--tag-name.md
 ├── scripts/
-│   ├── add_paper.py      ← CAPTURE phase
-│   ├── sync_issues.py    ← INTEGRATE phase (local)
-│   ├── query.py
-│   ├── build_index.py
-│   ├── needs_metadata.py
-│   └── validate.py
+│   ├── add_paper.py        ← CAPTURE phase
+│   ├── populate_urls.py    ← backfill URLs for existing papers
+│   ├── sync_issues.py      ← INTEGRATE phase (local)
+│   ├── tag_utils.py        ← shared tag library (imported, not run directly)
+│   ├── query.py            ← filter + pipe to LLM
+│   ├── build_index.py      ← regenerate INDEX.md + tags/
+│   ├── needs_metadata.py   ← find papers needing summaries
+│   └── validate.py         ← schema validation (CI gate)
 └── .github/
     └── workflows/
         ├── validate.yml      ← CI: validate + index check on push
