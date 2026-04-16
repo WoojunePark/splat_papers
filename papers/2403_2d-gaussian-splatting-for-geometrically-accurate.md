@@ -8,6 +8,7 @@ abstract: "3D Gaussian Splatting (3DGS) has recently revolutionized radiance fie
 
 website: https://surfsplatting.github.io
 code: https://github.com/autonomousvision/sdfstudio
+openreview:
 
 inputs:
   - posed-multi-view-images

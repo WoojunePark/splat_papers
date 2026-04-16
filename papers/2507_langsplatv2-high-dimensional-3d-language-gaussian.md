@@ -9,17 +9,18 @@ abstract: "In this paper, we introduce LangSplatV2, which achieves high-dimensio
 
 website: https://langsplat-v2.github.io
 code: https://github.com/ZhaoYujie2002/LangSplatV2
+openreview:
 issue: 8
 
 inputs:
-  - 
-
+  - posed-multi-view-images
+  - text-prompt
 outputs:
-  - 
-
+  - 3d-gaussians
+  - semantic-segmentation
 methods:
-  - 
-
+  - 3dgs
+  - clip
 benchmarks:
   - 
 
@@ -30,9 +31,9 @@ compared:
   - 
 ---
 
-## My Notes
+# LangSplatV2: High-dimensional 3D Language Gaussian Splatting with 450+ FPS
 
-## LLM Summary
+## My Notes
 
 ## Results
 
@@ -73,3 +74,11 @@ compared:
 ![Figure](https://arxiv.org/html/2507.07136/x7.png)
 
 *Figure 7: More qualitative comparisons of open-vocabulary 3D semantic segmentation on the LERF, Mip-NeRF360 and 3D-OVS dataset. We can see that our LangSplatV2 generates better masks than LangSplat, which shows the effectiveness of our LangSplatV2.*
+
+## LLM Summary
+
+The following report provides a detailed analysis of the research paper "LangSplatV2: High-dimensional 3D Language Gaussian Splatting with 450+ FPS."
+
+---
+
+> *Auto-generated summary. Do not edit manually.*

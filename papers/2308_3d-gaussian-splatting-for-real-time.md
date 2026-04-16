@@ -8,6 +8,7 @@ abstract: "Radiance Field methods have recently revolutionized novel-view synthe
 
 website: https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting
 code: https://github.com/graphdeco-inria/gaussian-splatting
+openreview:
 
 inputs:
   - posed-multi-view-images

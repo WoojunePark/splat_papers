@@ -9,16 +9,17 @@ abstract: "Recent advancements in 2D and multimodal models have achieved remarka
 
 website: https://feature4x.github.io
 code: https://github.com/ShijieZhou-UCLA/Feature4X
+openreview:
 issue: 4
 
 inputs:
-  - 
-
+  - monocular-video
+  - text-prompt
 outputs:
-  - 
-
+  - 4dgs
+  - semantic-segmentation
 methods:
-  - 
+  - vision-language-model
 
 benchmarks:
   - 
@@ -30,9 +31,9 @@ compared:
   - 
 ---
 
-## My Notes
+# Feature4X: Bridging Any Monocular Video to 4D Agentic AI with Versatile Gaussian Feature Fields
 
-## LLM Summary
+## My Notes
 
 ## Results
 
@@ -85,3 +86,9 @@ compared:
 ![Figure](https://arxiv.org/html/2503.20776/x11.png)
 
 *Figure D: SAM2 segmentation quality comparison for different dimensions of unified latent feature maps Best performing SAM2 segmentation is derived from the 32-dimensional unified latent feature map.*
+
+## LLM Summary
+
+**Feature4X** introduces a versatile framework that extends 2D vision foundation capabilities into a unified 4D Gaussian feature field derived simply from monocular video. By distilling features from various 2D vision tasks natively into an explicit 3D Gaussian Splatting scene optimized over time, the system inherently supports view-independent and temporally stable 2D segmentation, 3D scene editing, and dynamic 4D spatiotemporal Visual Question Answering (VQA). To address computational limits, it heavily compresses the underlying 4D field into a compact and sparse set of motion scaffold base features, and couples with LLMs/VLMs for complex iterative reasoning loops, forming the groundwork for comprehensive interactive 4D Agentic AI systems.
+
+> *Auto-generated summary. Do not edit manually.*

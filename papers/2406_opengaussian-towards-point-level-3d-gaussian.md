@@ -9,6 +9,7 @@ abstract: "This paper introduces OpenGaussian, a method based on 3D Gaussian Spl
 
 website: https://3d-aigc.github.io/OpenGaussian
 code: https://github.com/yanmin-wu/OpenGaussian
+openreview:
 issue: 3
 
 inputs:

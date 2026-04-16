@@ -9,17 +9,19 @@ abstract: "Bridging the gap between complex human instructions and precise 3D ob
 
 website: https://ChangyueShi.github.io/REALM
 code: https://github.com/ChangyueShi/REALM-Code
+openreview:
 issue: 1
 
 inputs:
-  - 
-
+  - posed-multi-view-images
+  - text-prompt
 outputs:
-  - 
-
+  - 3d-gaussians
+  - semantic-segmentation
 methods:
-  - 
-
+  - 3dgs
+  - mllm
+  - agent
 benchmarks:
   - 
 
@@ -30,9 +32,9 @@ compared:
   - 
 ---
 
-## My Notes
+# REALM: An MLLM-Agent Framework for Open World 3D Reasoning Segmentation and Editing on Gaussian Splatting
 
-## LLM Summary
+## My Notes
 
 ## Results
 
@@ -73,3 +75,9 @@ compared:
 ![Figure](https://arxiv.org/html/2510.16410v3/x8.png)
 
 *Figure 8: Ablation study on GLSpaG. The local grounding stage refines the 3D segmentation results.*
+
+## LLM Summary
+
+**REALM** presents an MLLM-agent framework focusing on open-world 3D reasoning segmentation and editing directly over 3D Gaussian Splatting representations. Current AI approaches distinctly segregate 3D open-vocabulary models—which excel at explicit direct queries—and 2D MLLMs that excel at reasoning but lack 3D spatial awareness. To bridge this gap without demanding costly 3D-specific retraining, REALM leverages 3DGS's fast spatial rendering. To circumvent the sensitivity and constraints of rendering single views to MLLMs, it introduces a "Global-to-Local Spatial Grounding" strategy. It employs multiple distinct camera views to coarsely localize targets based on intricate, implicit instructions via voting, followed by synthesizing close-up local views for highly accurate 3D mask generation. Empowering 3D interactions, it effortlessly supports precise object removal, replacement, and scene styling based on profound natural language commands.
+
+> *Auto-generated summary. Do not edit manually.*

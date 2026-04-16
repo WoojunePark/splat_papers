@@ -9,17 +9,18 @@ abstract: "Developing a multi-modal language model capable of understanding 3D s
 
 website: 
 code: 
+openreview:
 issue: 10
 
 inputs:
-  - 
-
+  - posed-multi-view-images
 outputs:
-  - 
-
+  - 3d-gaussians
+  - semantic-segmentation
 methods:
-  - 
-
+  - 3dgs
+  - llava
+  - vlm
 benchmarks:
   - 
 
@@ -30,9 +31,9 @@ compared:
   - 
 ---
 
-## My Notes
+# LLaVA$^3$: Representing 3D Scenes like a Cubist Painter to Boost 3D Scene Understanding of VLMs
 
-## LLM Summary
+## My Notes
 
 ## Results
 
@@ -85,3 +86,9 @@ compared:
 ![Figure](https://arxiv.org/html/2511.16454/figures/sup-instance.jpg)
 
 *Figure 10: Multi-Scale Instance Segmentation on ScanNet’s scene0086.*
+
+## LLM Summary
+
+**LLaVA3** fundamentally rethinks how to interface 3D scenes with 2D vision-language models (VLMs) by drawing inspiration from Cubist art. Instead of naively feeding spatially unstructured random camera parameters or point clouds to a VLM, LLaVA3 processes scenes into an explicit array of object hierarchies using an augmented NeRF setup equipped with a LLaVA feature field. Each distinct object entity is comprehensively summarized via an omnidirectional visual descriptor combining view-independent semantic features with view-dependent spatial relationship contexts. When orderly packed and dispatched to a frozen VLM like LLaVA, this scene decomposition massively outperforms existing un-finetuned multi-view methods on 3D semantic segmentation, question-answering, and language grounding routines.
+
+> *Auto-generated summary. Do not edit manually.*

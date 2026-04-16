@@ -9,6 +9,7 @@ abstract: "This paper presents SAGA (Segment Any 3D GAussians), a highly efficie
 
 website: https://jumpat.github.io/SAGA
 code: https://github.com/Jumpat/SegAnyGAussians.git
+openreview:
 issue: 
 
 inputs:
