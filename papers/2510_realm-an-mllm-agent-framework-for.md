@@ -48,6 +48,10 @@ compared:
 
 ## Figures
 
+![Figure](https://arxiv.org/html/2510.16410v3/x1.png)
+
+*Figure 1: We propose REALM, an MLLM-agent framework designed for open-world 3D reasoning segmentation and editing within 3D Gaussian Splatting (3DGS). REALM can perform reasoning over implicit instructions and accurately segment the target object. REALM also supports various 3D editing instructions, including object removal, replacement, and style transfer.*
+
 ![Figure](https://arxiv.org/html/2510.16410v3/x2.png)
 
 *Figure 2: REALM vs. Direct Image Inputs. Feeding one or a few random rendered views into the MLLM makes the outcome highly sensitive to viewpoint selection.*

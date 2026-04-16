@@ -47,6 +47,10 @@ compared:
 
 ## Figures
 
+![Figure](https://arxiv.org/html/2603.17605v1/x1.png)
+
+*Figure 1: Relational Language Gaussian Splatting. We build a platform with multi-hierarchical language Gaussian field and open-vocabulary 3D scene graph, to support various tasks such as object selection via click, open vocabulary 3D object segmentation across semantic granularity, spatial relationship reasoning between objects and querying object with relation-guidance.*
+
 ![Figure](https://arxiv.org/html/2603.17605v1/x2.png)
 
 *Figure 2: ReLaGS Overview. Given a reconstructed Gaussian scene, redundant primitives are first pruned to improve geometric accuracy. Heuristic clustering under multi-level SAM supervision then forms a hierarchical scene structure, where each cluster is assigned a CLIP-based language feature with outlier rejection. Finally, open-vocabulary inter- and intra-object scene graphs are obtained either by lifting LLM-derived relations for semantic diversity or by using a pretrained graph network for efficient offline inference.*

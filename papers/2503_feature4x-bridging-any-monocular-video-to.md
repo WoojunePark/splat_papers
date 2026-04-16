@@ -47,9 +47,13 @@ compared:
 
 ## Figures
 
+![Figure](https://arxiv.org/html/2503.20776/x1.png)
+
+*Figure 1: Feature4X: Building 4D Interactive Scenes with Agentic AI from Monocular Videos. By dynamically distilling model-conditioned features and integrating 2D foundation models with LLMs in feedback loops, Feature4X enables multimodal tasks across 2D, 3D, and 4D with high-level language inputs or direct user interactions, including (but not limited to) segmentation, scene editing, and VQA across novel views and all time steps, unlocking new possibilities for 4D agentic AI.*
+
 ![Figure](https://arxiv.org/html/2503.20776/x2.png)
 
-*Figure 2: Method overview. Given an input monocular video, we infer 2D priors to segment static background (represented by static 3D Gaussians augmented with latent features) and dynamic foreground (represented by dynamic 3D Gaussians guided by Motion Scaffolds [35], a set of nodes {𝐯i}subscript𝐯𝑖\{\mathbf{v}*{i}\}{ bold_v start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT } encoding 3D motion trajectories and latent features hisubscriptℎ𝑖h*{i}italic_h start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT). Dynamic Gaussian features and motions are computed via interpolation from their K𝐾Kitalic_K-nearest scaffold nodes. At each timestep, dynamic Gaussians are warped and fused with static Gaussians. A parallel rasterization [102] generates RGB images and a unified latent feature map, decoded into task-specific features—illustrated here by SAM2 [68], CLIP-LSeg [36], and InternVideo2 [84] for representative 2D (novel view segmentation), 3D (scene editing), and 4D (spatiotemporal VQA) tasks. Our framework generalizes to any 2D vision foundation model and is trained end-to-end using input RGB frames and customized features from pretrained 2D models. At inference, rendered feature maps from arbitrary views and timesteps are directly fed into task-specific decoders, seamlessly supporting user prompts and LLM interactions to form a unified 4D agentic AI system.*
+*Figure 2: Method overview. Given an input monocular video, we infer 2D priors to segment static background (represented by static 3D Gaussians augmented with latent features) and dynamic foreground (represented by dynamic 3D Gaussians guided by Motion Scaffolds [35], a set of nodes {𝐯i}subscript𝐯𝑖\{\mathbf{v}_{i}\}{ bold_v start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT } encoding 3D motion trajectories and latent features hisubscriptℎ𝑖h_{i}italic_h start_POSTSUBSCRIPT italic_i end_POSTSUBSCRIPT). Dynamic Gaussian features and motions are computed via interpolation from their K𝐾Kitalic_K-nearest scaffold nodes. At each timestep, dynamic Gaussians are warped and fused with static Gaussians. A parallel rasterization [102] generates RGB images and a unified latent feature map, decoded into task-specific features—illustrated here by SAM2 [68], CLIP-LSeg [36], and InternVideo2 [84] for representative 2D (novel view segmentation), 3D (scene editing), and 4D (spatiotemporal VQA) tasks. Our framework generalizes to any 2D vision foundation model and is trained end-to-end using input RGB frames and customized features from pretrained 2D models. At inference, rendered feature maps from arbitrary views and timesteps are directly fed into task-specific decoders, seamlessly supporting user prompts and LLM interactions to form a unified 4D agentic AI system.*
 
 ![Figure](https://arxiv.org/html/2503.20776/x3.png)
 
@@ -82,10 +86,6 @@ compared:
 ![Figure](https://arxiv.org/html/2503.20776/x10.png)
 
 *Figure C: CLIP semantic segmentation quality comparison. We compare the CLIP semantic segmentation quality between ground-truth (inference from RGB) and our implementation (inference from feature map) for both training and novel views.*
-
-![Figure](https://arxiv.org/html/2503.20776/x11.png)
-
-*Figure D: SAM2 segmentation quality comparison for different dimensions of unified latent feature maps Best performing SAM2 segmentation is derived from the 32-dimensional unified latent feature map.*
 
 ## LLM Summary
 

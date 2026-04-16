@@ -47,6 +47,10 @@ compared:
 
 ## Figures
 
+![Figure](https://arxiv.org/html/2503.18052/x1.png)
+
+*Figure 1: We present the 3DGS indoor dataset SceneSplat-7K which includes 7K scenes generated from ARKitScenes [1], Replica [45], ScanNet [5], ScanNet++ [57], Hypersim[42], 3RScan [48], and Matterport3D [2]. Leveraging this high-quality dataset, we propose SceneSplat, the first model to predict open-vocabulary language features for millions of 3D Gaussians in a single forward pass.*
+
 ![Figure](https://arxiv.org/html/2503.18052/x2.png)
 
 *Figure 2: SceneSplat Overview. The SceneSplat-7K dataset enables Vision-Language Pretraining and Self-Supervised Pretraining. For vision-language pretraining, we associate each 3D Gaussian primitive with semantic features based on our label collection process and train a generalizable open-vocabulary learner that predict per-gaussian embeddings. For self-supervised pretraining, we employ Masked Gaussian Modeling to reconstruct masked primitives, Self-Distillation Learning for augmentation-invariant features, and Language-Gaussian Alignment for scenes with collected labels. The former achieves state-of-the-art zero-shot segmentation results on ScanNet200 [5], ScanNet++ [57], and Matterport3D [2] benchmarks and the latter unlocks training on large-scale 3DGS data.*
@@ -82,10 +86,6 @@ compared:
 ![Figure](https://arxiv.org/html/2503.18052/x5.png)
 
 *Figure D: Self-supervised Reconstructions across Multiple Scenes. Each row shows (left to right) the unmasked input, masked scene, reconstruction, and a PCA projection of features*
-
-![Figure](https://arxiv.org/html/2503.18052/x6.png)
-
-*Figure E: Comparison of Scene Query Results Using Our Predictions and GT Language Labels on ScanNet++.*
 
 ## LLM Summary
 

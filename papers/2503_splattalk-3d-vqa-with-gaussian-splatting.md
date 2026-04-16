@@ -48,6 +48,10 @@ compared:
 
 ## Figures
 
+![Figure](https://arxiv.org/html/2503.06271/x1.png)
+
+*Figure 1: SplatTalk. We propose a self-supervised 3D-Language Gaussian Splatting model trained from multi-view RGB images. First, images are encoded using a pretrained 2D Vision-Language Model (VLM) and projected into visual-language feature maps via a multimodal projector. These feature maps are then learned within a feed-forward 3D-Language Gaussian Splatting model, producing a 3D-Language Gaussian Field that encodes spatial and semantic information in 3D space. During inference, the 3D Gaussian features are directly queried by a Large Language Model (LLM) to perform 3D question-answering (3D VQA) tasks.*
+
 ![Figure](https://arxiv.org/html/2503.06271/x2.png)
 
 *Figure 2: Overview. Left: During the self-supervised 3D-language Gaussian Splatting training phase, multiple RGB input views are first encoded into Gaussian latent features (Gaussian triplets). These latent features are then decoded into Gaussian parameters for rendering, along with a low-dimensional visual-language feature ffitalic_f. To ensure proper supervision of this low-dimensional feature, we train an autoencoder that maps the high-dimensional, unbounded features obtained from LLaVA-OV, specifically, the visual tokens serving as direct inputs to the LLM, onto a low-dimensional hypersphere space. Right: During 3D VQA inference, visual-language features are directly extracted from the 3D Gaussians. These features are then mapped back to the original high-dimensional space using the pretrained decoder and subsequently used as direct visual token inputs to the LLM. LoRA fine-tuning of the LLM is optional.*
