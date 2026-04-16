@@ -129,12 +129,13 @@ python scripts/add_paper.py 2308.04079 --name 3d-gaussian-splatting --summary
 python scripts/add_paper.py 2308.04079 --no-pdf   # skip PDF download (faster)
 ```
 
-This fetches title and date from arXiv. It also **automatically extracts `website` and `code` URLs** by:
+This fetches title and date from arXiv. It also **automatically extracts `website`, `code`, and `openreview` URLs** by:
 
 1. Parsing the arXiv abstract-page HTML — the "Comments" field often contains explicit project/code links.
 2. Downloading the PDF and extracting all hyperlink annotations (requires `pip install pypdf`).
+3. Searching the OpenReview API (`api2.openreview.net`) by paper title — math expressions (e.g., `$\pi^3$`) are stripped before searching for better hit rates.
 
-URLs are classified heuristically — GitHub/GitLab repos become `code:`, `*.github.io` pages become `website:`, and high-scoring unknown URLs get promoted to `website:`. You may still need to correct or fill in missing links manually.
+URLs are classified heuristically — GitHub/GitLab repos become `code:`, `*.github.io` pages become `website:`, and high-scoring unknown URLs get promoted to `website:`. The OpenReview lookup is best-effort; if the paper is not on OpenReview or the API is rate-limited, `openreview:` is left blank. You may still need to correct or fill in missing links manually.
 
 Use `--no-pdf` to skip the PDF download if you want faster scaffolding and don't mind filling in links yourself.
 
@@ -167,6 +168,8 @@ papers/_template.md  →  papers/YYMM_paper-name.md
 | `outputs` | List of kebab-case tags | `[novel-view, 3d-gaussians]` |
 | `methods` | List of kebab-case tags | `[3dgs, mipmap]` |
 
+> **`inputs`, `outputs`, `methods` — human-only.** These fields must only be filled by a human who has actually read the paper (via the GitHub Issue ENGAGE workflow). Agents must leave them empty. Do not infer or guess values from the abstract.
+
 #### Optional fields
 
 | Field | Format | Notes |
@@ -175,6 +178,7 @@ papers/_template.md  →  papers/YYMM_paper-name.md
 | `venue` | Free text | `SIGGRAPH 2023`, `CVPR 2024` |
 | `website` | URL | Project page |
 | `code` | URL | GitHub / code repository |
+| `openreview` | URL | OpenReview forum page (e.g., `https://openreview.net/forum?id=XJmHO2ta9g`) — auto-populated by `add_paper.py` |
 | `benchmarks` | List of tags | Datasets used for evaluation |
 | `related` | List of filenames (no `.md`) | Papers building on similar ideas |
 | `compared` | List of filenames (no `.md`) | Papers compared against in experiments |
@@ -413,10 +417,11 @@ Use this task to batch-write proper LLM Summaries for any paper entries that hav
 1. Check if `papers/YYMM_*.md` already exists.
 2. If not, run `python scripts/add_paper.py {arxiv_id} --summary` to scaffold.
 3. If more detail needed, fetch ArXiv HTML (`https://arxiv.org/html/{id}`) via `read_url_content`.
-4. Fill in tags, venue, website, code URL.
+4. Fill in `venue`, `website`, `code` URL, `benchmarks`, `related`, `compared` as applicable.
 5. Write or refine the `## LLM Summary` from the paper content.
 6. Set `status: to-read` (user hasn't read it yet).
-7. Run `validate.py` + `build_index.py`.
+7. **Do NOT fill `inputs`, `outputs`, or `methods`** — leave them as empty placeholders for the human reader.
+8. Run `validate.py` + `build_index.py`.
 
 ### "Compare papers on topic X"
 

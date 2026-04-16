@@ -1,11 +1,13 @@
 ---
 name: "Populate Paper Metadata"
-description: "How to automatically infer and fill missing tags and cross-references for a paper."
+description: "How to automatically fill cross-references and generate LLM Summaries for a paper. Does NOT fill inputs/outputs/methods — those are human-only."
 ---
 
 # Populate Paper Metadata
 
-This skill instructs you on how to automatically populate the empty frontmatter fields (`inputs`, `outputs`, `methods`, `benchmarks`, `related`, `compared`) of a newly added paper, and simultaneously generate a structured `## LLM Summary` section if needed.
+This skill instructs you on how to automatically populate the auto-fillable frontmatter fields (`benchmarks`, `related`, `compared`) of a newly added paper, and simultaneously generate a structured `## LLM Summary` section if needed.
+
+> **Important:** `inputs`, `outputs`, and `methods` are **human-only fields**. They must be filled by a human who has actually read the paper (via the GitHub Issue ENGAGE workflow). **Do NOT auto-populate these fields**, even if you can infer plausible values from the abstract or paper content.
 
 **Pre-requisite:** The paper must already have an entry scaffolded (e.g., via `add_paper.py`), and the target fields are currently empty (set to `-`) or the LLM Summary is missing/unstructured.
 
@@ -30,38 +32,23 @@ To accurately categorize the paper, gather its context:
 
 ## Step 2: Determine Rules for Each Field
 
-### `inputs`
+> **Human-only fields — do NOT fill:** `inputs`, `outputs`, `methods`.
+> These must only be filled by a human who has read the paper. Leave them as empty placeholders (`- `).
 
-- **Definition:** What data does the method take in?
-- **Format:** List of kebab-case tags.
-- **Examples:** `posed-multi-view-images`, `sfm-point-cloud`, `monocular-video`, `text-prompt`, `unposed-images`.
-
-### `outputs`
-
-- **Definition:** What is the main outcome of the method?
-- **Format:** List of kebab-case tags.
-- **Examples:** `novel-view`, `3d-gaussians`, `mesh`, `dynamic-scene`, `semantic-segmentation`.
-
-### `methods`
-
-- **Definition:** What core algorithms, representations, or unique techniques are used?
-- **Format:** List of kebab-case tags.
-- **Examples:** `3dgs`, `differentiable-rasterization`, `mlp`, `spherical-harmonics`, `diffusion-model`.
-
-### `benchmarks`
+### `benchmarks` ✅ auto-fillable
 
 - **Definition:** Which datasets are used to evaluate the method?
 - **Format:** List of kebab-case tags.
 - **Examples:** `mipnerf360`, `tanks-and-temples`, `deep-blending`, `waymo`, `nerf-synthetic`.
 
-### `related`
+### `related` ✅ auto-fillable
 
 - **Definition:** Which existing papers in our knowledge base does this paper build upon, extend, or take direct inspiration from?
 - **Format:** List of exact filenames **without the `.md` extension**.
 - **Rule:** You MUST search the `papers/` directory. Only include a related paper if it already exists in our knowledge base.
 - **Example:** `2308_3d-gaussian-splatting`
 
-### `compared`
+### `compared` ✅ auto-fillable
 
 - **Definition:** Which prior works does this paper compare its results against?
 - **Format:** List of exact filenames **without the `.md` extension**.
@@ -122,7 +109,7 @@ This paper introduces a novel approach...
 > *Auto-generated summary. Do not edit manually.*
 ```
 
-*Note: Remove the empty `-` placeholder. If a field truly cannot be inferred from the context, you can leave it empty, but strive to at least fill `inputs`, `outputs`, and `methods`.*
+*Note: Remove the empty `-` placeholder for fields you fill. Leave `inputs`, `outputs`, and `methods` as empty placeholders — they are filled exclusively by the human reader via the GitHub Issue workflow.*
 
 ## Step 5: Validate
 

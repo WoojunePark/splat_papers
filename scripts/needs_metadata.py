@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-needs_metadata.py — List papers that are missing YAML frontmatter tags or a proper LLM Summary.
+needs_metadata.py — List papers that are missing a proper LLM Summary.
+
+Note: `inputs`, `outputs`, and `methods` are human-only fields and are NOT
+checked by this script. Only `benchmarks`, `related`, and `compared` may be
+auto-populated by agents, but they are optional and not flagged here.
 
 A paper needs a summary if its `## LLM Summary` section is empty or unstructured.
-A paper needs metadata if its `inputs`, `outputs`, or `methods` arrays are empty.
 
 Usage:
     python scripts/needs_metadata.py                   # human-readable list
@@ -98,14 +101,14 @@ def get_summary_issue(summary_text: str) -> str | None:
 
 
 def get_missing_metadata(meta: dict) -> list[str]:
-    """Return a list of required YAML frontmatter fields that are missing/empty."""
-    missing = []
-    REQUIRED_FIELDS = ["inputs", "outputs", "methods"]
-    for field in REQUIRED_FIELDS:
-        val = meta.get(field)
-        if not val or (isinstance(val, list) and not any(val)):
-            missing.append(field)
-    return missing
+    """Return a list of auto-fillable YAML frontmatter fields that are missing/empty.
+
+    Note: `inputs`, `outputs`, and `methods` are human-only fields and are intentionally
+    excluded from this check. They must be filled by a human who has read the paper.
+    """
+    # No auto-fillable required fields are currently enforced.
+    # (benchmarks/related/compared are optional and not flagged.)
+    return []
 
 
 # ---------------------------------------------------------------------------

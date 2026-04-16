@@ -119,8 +119,8 @@ _GITHUB_IO_RE = re.compile(r'^https?://[A-Za-z0-9_.-]+\.github\.io(/[^\s"\x27<>]
 
 # URLs we never want as website/code
 _BLOCKLIST_RE = re.compile(
-    r"(arxiv\.org|doi\.org|semanticscholar|acm\.org|openreview\.net|"
-    r"springer\.com|ieee\.org|proceedings\.mlr|huggingface\.co/papers|"
+    r"(arxiv\.org|doi\.org|semanticscholar|acm\.org|"
+    r"openreview\.net|springer\.com|ieee\.org|proceedings\.mlr|huggingface\.co/papers|"
     r"paperswithcode\.com/paper|youtube\.com|youtu\.be|twitter\.com|x\.com|"
     r"linkedin\.com|facebook\.com|instagram\.com|"
     # GitHub meta-pages (not repos)
@@ -226,6 +226,103 @@ def extract_figures_from_arxiv_html(arxiv_id: str) -> list[dict]:
         figures.append({"src": src, "caption": caption})
     
     return figures
+
+
+# ---------------------------------------------------------------------------
+# OpenReview URL lookup
+# ---------------------------------------------------------------------------
+
+def _strip_math(title: str) -> str:
+    """Remove LaTeX math expressions from a title for plain-text search."""
+    title = re.sub(r"\$[^$]+\$", "", title)       # $...$ inline math
+    title = re.sub(r"\\\(.*?\\\)", "", title)      # \(...\) inline math
+    title = re.sub(r"\s+", " ", title).strip()
+    return title
+
+
+def _get_title_from_note(note: dict) -> str:
+    """Extract the title string from either 'forumContent' or 'content' field."""
+    for field in ("forumContent", "content"):
+        container = note.get(field) or {}
+        title_val = container.get("title", {})
+        if isinstance(title_val, dict):
+            return title_val.get("value", "")
+        if isinstance(title_val, str):
+            return title_val
+    return ""
+
+
+def extract_openreview_url(title: str, timeout: int = 15) -> str:
+    """
+    Search OpenReview for a paper by title and return the forum URL if found.
+
+    Uses the ``api2.openreview.net/notes/search`` endpoint.  Strips LaTeX math
+    from the title before searching for better hit rates.  Returns an empty
+    string when the paper is not found or the request fails (rate-limited, etc.).
+
+    Rate-limit note: the API allows roughly 1 request per minute from a single
+    IP without credentials.  Because ``add_paper.py`` is called once per paper
+    this is usually fine, but errors are caught and silently skipped.
+    """
+    clean = _strip_math(title)
+    url = (
+        "https://api2.openreview.net/notes/search"
+        f"?term={urllib.parse.quote(clean)}&offset=0&limit=25"
+    )
+    print(f"  Searching OpenReview: {clean!r} ...")
+    try:
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "splat-papers-bot/1.0"}
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read())
+    except urllib.error.HTTPError as exc:
+        if exc.code == 429:
+            print("  [info] OpenReview rate-limited — skipping.")
+        elif exc.code == 403:
+            print("  [info] OpenReview access denied (rate limit) — skipping.")
+        else:
+            print(f"  [warn] OpenReview HTTP error {exc.code} — skipping.")
+        return ""
+    except urllib.error.URLError as exc:
+        print(f"  [warn] OpenReview lookup failed: {exc.reason} — skipping.")
+        return ""
+    except Exception as exc:
+        print(f"  [warn] OpenReview lookup unexpected error: {exc} — skipping.")
+        return ""
+
+    notes = data.get("notes", [])
+    clean_lower = clean.lower()
+
+    # Pass 1 — exact title match
+    for note in notes:
+        note_title = _get_title_from_note(note)
+        if not note_title:
+            continue
+        if _strip_math(note_title).lower() == clean_lower:
+            forum_id = note.get("forum") or note.get("id")
+            if forum_id:
+                return f"https://openreview.net/forum?id={forum_id}"
+
+    # Pass 2 — fuzzy word-overlap >= 80 %
+    title_words = set(clean_lower.split())
+    best_url = ""
+    best_score = 0.0
+    for note in notes:
+        note_title = _get_title_from_note(note)
+        if not note_title:
+            continue
+        note_words = set(_strip_math(note_title).lower().split())
+        if not note_words:
+            continue
+        score = len(title_words & note_words) / max(len(title_words), len(note_words))
+        if score >= 0.8 and score > best_score:
+            forum_id = note.get("forum") or note.get("id")
+            if forum_id:
+                best_score = score
+                best_url = f"https://openreview.net/forum?id={forum_id}"
+
+    return best_url
 
 
 def extract_alphaxiv_summary(arxiv_id: str) -> str:
@@ -433,6 +530,7 @@ def generate_paper_md(
     meta: dict,
     website: str,
     code: str,
+    openreview: str = "",
     summary_text: str = "",
     figures: list[dict] = None,
     issue_number: int = 0,
@@ -463,6 +561,7 @@ def generate_paper_md(
         "",
         f"website: {website}",
         f"code: {code}",
+        f"openreview: {openreview}",
         f"issue: {issue_number if issue_number else ''}",
         "",
         "inputs:",
@@ -534,6 +633,7 @@ def _build_issue_body(
     meta: dict,
     website: str,
     code: str,
+    openreview: str,
     figures: list[dict],
 ) -> str:
     """Build the GitHub Issue body for the Capture phase."""
@@ -550,6 +650,8 @@ def _build_issue_body(
         links.append(f"[Website]({website})")
     if code:
         links.append(f"[Code]({code})")
+    if openreview:
+        links.append(f"[OpenReview]({openreview})")
 
     lines = [
         f"## [{title}]({abs_url})",
@@ -613,6 +715,7 @@ def create_github_issue(
     meta: dict,
     website: str,
     code: str,
+    openreview: str,
     figures: list[dict],
 ) -> int:
     """
@@ -631,7 +734,7 @@ def create_github_issue(
 
     title = meta.get("title", arxiv_id)
     issue_title = title
-    body = _build_issue_body(arxiv_id, meta, website, code, figures)
+    body = _build_issue_body(arxiv_id, meta, website, code, openreview, figures)
 
     # Ensure labels exist before using them (gh creates labels implicitly on GitHub,
     # but `gh issue create` can fail if labels don't exist in the repo).
@@ -788,15 +891,25 @@ def main() -> None:
         sys.exit(1)
 
     # ------------------------------------------------------------------
-    # 4. Create GitHub Issue (GTD Capture phase)
+    # 4. Look up OpenReview URL
+    # ------------------------------------------------------------------
+    print("Looking up OpenReview ...")
+    openreview = extract_openreview_url(meta.get("title", ""))
+    if openreview:
+        print(f"  openreview => {openreview}")
+    else:
+        print("  openreview => (not found)")
+
+    # ------------------------------------------------------------------
+    # 5. Create GitHub Issue (GTD Capture phase)
     # ------------------------------------------------------------------
     issue_number = 0
     if not args.no_issue:
         print("Creating GitHub Issue (GTD inbox) ...")
-        issue_number = create_github_issue(arxiv_id, meta, website, code, figures)
+        issue_number = create_github_issue(arxiv_id, meta, website, code, openreview, figures)
 
     # ------------------------------------------------------------------
-    # 5. Generate and write the paper entry
+    # 6. Generate and write the paper entry
     # ------------------------------------------------------------------
     print("\nFetching alphaXiv summary ...")
     alphaxiv_summary = extract_alphaxiv_summary(arxiv_id)
@@ -807,7 +920,7 @@ def main() -> None:
         summary_text = meta.get("abstract", "") if args.summary else ""
 
     content = generate_paper_md(
-        arxiv_id, meta, website, code, summary_text, figures, issue_number
+        arxiv_id, meta, website, code, openreview, summary_text, figures, issue_number
     )
     filepath.write_text(content, encoding="utf-8")
 
@@ -816,7 +929,7 @@ def main() -> None:
         print(f"GitHub Issue #{issue_number} opened — check GitHub mobile to read on the go.")
 
     # ------------------------------------------------------------------
-    # 6. Rebuild INDEX.md automatically
+    # 7. Rebuild INDEX.md automatically
     # ------------------------------------------------------------------
     build_index_script = script_dir / "build_index.py"
     if build_index_script.exists():

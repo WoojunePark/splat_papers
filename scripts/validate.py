@@ -91,8 +91,9 @@ def _parse_scalar(value: str):
 # Validation rules
 # ---------------------------------------------------------------------------
 
-REQUIRED_FIELDS = ["title", "date", "arxiv", "status", "inputs", "outputs", "methods"]
-TAG_FIELDS_ALLOW_EMPTY = {"inputs", "outputs", "methods"}  # empty is OK (fill later via populate_paper_metadata)
+REQUIRED_FIELDS = ["title", "date", "arxiv", "status"]
+# inputs/outputs/methods must be present in the schema but are human-only — empty is always OK.
+HUMAN_ONLY_TAG_FIELDS = {"inputs", "outputs", "methods"}
 OPTIONAL_LIST_FIELDS = ["benchmarks", "related", "compared"]
 VALID_STATUSES = {"read", "skimmed", "to-read"}
 TAG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$")
@@ -126,12 +127,16 @@ def validate_paper(filepath: Path, all_paper_stems: set[str] | None = None) -> t
         if field not in meta:
             errors.append(f"Missing required field: {field}")
         elif isinstance(meta[field], list) and not any(meta[field]):
-            if field not in TAG_FIELDS_ALLOW_EMPTY:
-                errors.append(f"Field '{field}' is an empty list")
-            else:
-                warnings.append(f"Field '{field}' is empty (run populate_paper_metadata to fill)")
+            errors.append(f"Field '{field}' is an empty list")
         elif isinstance(meta[field], str) and not meta[field]:
             errors.append(f"Field '{field}' is empty")
+
+    # Human-only tag fields: must exist in frontmatter, but empty is always acceptable
+    for field in HUMAN_ONLY_TAG_FIELDS:
+        if field not in meta:
+            errors.append(f"Missing required field: {field}")
+        elif isinstance(meta[field], list) and not any(meta[field]):
+            warnings.append(f"Field '{field}' is empty (human-only — fill via GitHub Issue ENGAGE workflow after reading)")
 
     # Status validation
     status = meta.get("status", "")
@@ -163,7 +168,7 @@ def validate_paper(filepath: Path, all_paper_stems: set[str] | None = None) -> t
             errors.append(f"Missing required section: {section}")
 
     # URL validation (basic)
-    for url_field in ["website", "code"]:
+    for url_field in ["website", "code", "openreview"]:
         url = meta.get(url_field, "")
         if url and isinstance(url, str) and not url.startswith("http"):
             errors.append(f"Field '{url_field}' doesn't look like a URL: {url}")
