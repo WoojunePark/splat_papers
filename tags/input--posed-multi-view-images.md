@@ -1,9 +1,10 @@
 # input: posed-multi-view-images
 
-*14 papers*
+*15 papers*
 
 | Paper | Date | Venue |
 |---|---|---|
+| [In Depth We Trust](../papers/2604_in-depth-we-trust-reliable-monocular.md) | 26.04 | [] |
 | [GSMem](../papers/2603_gsmem-3d-gaussian-splatting-as-persistent.md) | 26.03 | [] |
 | [ReLaGS](../papers/2603_relags-relational-language-gaussian-splatting.md) | 26.03 | [] |
 | [Vision-Language Memory for Spatial Reasoning](../papers/2511_vision-language-memory-for-spatial-reasoning.md) | 25.11 | [] |

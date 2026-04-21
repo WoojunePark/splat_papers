@@ -3,23 +3,24 @@ title: "In Depth We Trust: Reliable Monocular Depth Supervision for Gaussian Spl
 date: 2026-04-07
 arxiv: "2604.05715v1"
 venue:
-status: to-read
+status: read
 
 abstract: "Using accurate depth priors in 3D Gaussian Splatting helps mitigate artifacts caused by sparse training data and textureless surfaces. However, acquiring accurate depth maps requires specialized acquisition systems. Foundation monocular depth estimation models offer a cost-effective alternative, but they suffer from scale ambiguity, multi-view inconsistency, and local geometric inaccuracies, which can degrade rendering performance when applied naively. This paper addresses the challenge of reliably leveraging monocular depth priors for Gaussian Splatting (GS) rendering enhancement. To this end, we introduce a training framework integrating scale-ambiguous and noisy depth priors into geometric supervision. We highlight the importance of learning from weakly aligned depth variations. We introduce a method to isolate ill-posed geometry for selective monocular depth regularization, restricting the propagation of depth inaccuracies into well-reconstructed 3D structures. Extensive experiments across diverse datasets show consistent improvements in geometric accuracy, leading to more faithful depth estimation and higher rendering quality across different GS variants and monocular depth backbones tested."
 
 website: 
 code: https://github.com/graphdeco-inria/gaussian-splatting.git
 openreview: 
-issue: 22
+issue: 
 
 inputs:
-  - 
+  - posed-multi-view-images
+  - depth
 
 outputs:
-  - 
+  - 3dgs
 
 methods:
-  - 
+  - depth-align
 
 benchmarks:
   - 
@@ -36,6 +37,11 @@ compared:
 ## My Notes
 
 
+
+**[Note from GitHub, 2026-04-21]**
+
+`모노 뎁스를 쓸 때 더 잘 쓰자`는 논문
+그런데 결과 보면 weak baseline인 3DGS 보다 depth를 쓰고 + 자기네가 제안한 더 나은 방식을 썼어도 그다지 향상이 없음..
 ## Results
 
 <!-- Optional: structured benchmark results for cross-paper comparison -->
