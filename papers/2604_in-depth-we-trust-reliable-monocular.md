@@ -50,10 +50,6 @@ compared:
 
 ![Figure](https://arxiv.org/html/2604.05715v1/x1.png)
 
-**
-
-![Figure](https://arxiv.org/html/2604.05715v1/x1.png)
-
 *Figure 1: The quality of monocular depth priors directly impacts the rendering performance of 3D Gaussian Splatting (3DGS) [19]. (a) Existing foundation monocular depth estimation models suffer from scale ambiguity and may fail to recover fine-grained details. (b) The rendering performance of 3DGS is correlated with the quality of the monocular depth priors used; naively applying monocular depth supervision in already well-reconstructed regions can even degrade performance. Our proposed framework provides a more versatile and reliable way to leverage monocular depth priors compared to previous scale-invariant depth supervision used in [20].*
 
 ![Figure](https://arxiv.org/html/2604.05715v1/x2.png)

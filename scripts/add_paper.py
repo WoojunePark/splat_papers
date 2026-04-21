@@ -237,7 +237,12 @@ def extract_figures_from_arxiv_html(arxiv_id: str) -> list[dict]:
             else:
                 src = f"https://arxiv.org/html/{arxiv_id}/{src}"
         
-        figures.append({"src": src, "caption": caption})
+        existing = next((f for f in figures if f["src"] == src), None)
+        if existing:
+            if not existing["caption"] and caption:
+                existing["caption"] = caption
+        else:
+            figures.append({"src": src, "caption": caption})
     
     return figures
 
@@ -617,7 +622,7 @@ def generate_paper_md(
     if figures:
         lines.append("## Figures")
         lines.append("")
-        for fig in figures[:10]:
+        for fig in figures[:100]:
             caption = fig.get("caption", "Figure")
             src = fig.get("src", "")
             lines.append(f"![Figure]({src})")
@@ -682,17 +687,16 @@ def _build_issue_body(
         "",
     ]
 
-    top_figs = (figures or [])[:3]
+    top_figs = (figures or [])[:100]
     if top_figs:
         lines.append("### Figures")
         lines.append("")
         for fig in top_figs:
             src = fig.get("src", "")
             cap = fig.get("caption", "") or "Figure"
-            cap_short = cap[:120] + "..." if len(cap) > 120 else cap
             if src:
-                lines.append(f"![{cap_short}]({src})")
-                lines.append(f"*{cap_short}*")
+                lines.append(f"![Figure]({src})")
+                lines.append(f"*{cap}*")
                 lines.append("")
 
     lines += [
