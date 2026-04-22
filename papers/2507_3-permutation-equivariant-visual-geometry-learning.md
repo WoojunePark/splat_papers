@@ -3,23 +3,23 @@ title: "$π^3$: Permutation-Equivariant Visual Geometry Learning"
 date: 2025-07-17
 arxiv: "2507.13347"
 venue:
-status: to-read
+status: read
 
 abstract: "We introduce $\pi^3$, a feed-forward neural network that offers a novel approach to visual geometry reconstruction, breaking the reliance on a conventional fixed reference view. Previous methods often anchor their reconstructions to a designated viewpoint, an inductive bias that can lead to instability and failures if the reference is suboptimal. In contrast, $\pi^3$ employs a fully permutation-equivariant architecture to predict affine-invariant camera poses and scale-invariant local point maps without any reference frames. This design not only makes our model inherently robust to input ordering, but also leads to higher accuracy and performance. These advantages enable our simple and bias-free approach to achieve state-of-the-art performance on a wide range of tasks, including camera pose estimation, monocular/video depth estimation, and dense point map reconstruction. Code and models are available at this https URL."
 
 website: https://yyfz.github.io/pi3
 code: https://github.com/yyfz/Pi3
 openreview: 
-issue: 17
+issue: 
 
 inputs:
-  - 
+  - posed-multi-view-images
 
 outputs:
-  - 
+  - point-cloud-confidence
 
 methods:
-  - 
+  - dino
 
 benchmarks:
   - 
@@ -36,6 +36,83 @@ compared:
 ## My Notes
 
 
+
+**[Note from GitHub, 2026-04-22]**
+
+----
+### Good
+    - `VGGT`를 베이스 + `MoGe`에서 좋은 점을 잘 가져왔음
+    - `N`개 입력에 대해 각각을 GT와 일대일 대응해서 `N`번 loss 계산이 아니라, `Nx(N-1)` pair로 formulation 하면 제곱으로 데이터를 늘리는 효과 (`N^2`번 계산)
+    - 온갖 공개 데이터에 대해 학습하여 성능 개선
+
+### Bad
+    - 모델 구조적으로 noble 한 건 없어 보임
+
+----
+### Problem definition
+`DUST3R` 랑 같은 계열.
+    - 입력: 사진 여러 장 (`H`x`W`x`3`x`N`)
+    - 출력: 입력 사진들에 대한
+    - camera pose(`4`x`4`x`N`)
+    - 각 이미지 좌표계의 point map(`H`x`W`x`3`x`N`)
+    - confidence map(`H`x`W`x`N`)
+
+----
+왜 제목에 permutation-equivariant가 들어갔냐면, N개 이미지를 어떤 순서로 넣든 결과가 같기 때문.
+기존에는 하나의 reference view가 정해지고, 이에 의존적.
+
+Appendix에서 굉장히 자세하게 어디서 모델 구조, 학습 기법들을 따왔는지 설명.
+
+----
+### Training
+공개 3차원 복원 데이터셋 거의 대부분에 대해 학습.
+include GTA-SfM (Wang & Shen, 2020), CO3D (Reizenstein et al., 2021),
+WildRGB-D (Xia et al., 2024), Habitat (Savva et al., 2019), ARKitScenes (Baruch et al., 2021),
+TartanAir (Wang et al., 2020), ScanNet (Dai et al., 2017), ScanNet++ (Yeshwanth et al., 2023),
+BlendedMVG (Yao et al., 2020), MatrixCity (Li et al., 2023), MegaDepth (Li & Snavely, 2018),
+Hypersim (Roberts et al., 2021), Taskonomy (Zamir et al., 2018), Mid-Air (Fonder & Van Droogenbroeck, 2019), and an internal dynamic scene dataset.
+
+----
+### Architecture
+    - DINOv2: 이미지 to 토큰. `VGGT`와 같은 구조
+    - Encoder, attention modules: `VGGT`에서 레이어 개수 조금 줄임
+    - Decoders
+    - camera poses, local point maps, confidence scores: 같은 5레이어 `트랜스포머`이나, weight는 각자
+    - Output heads
+    - local point maps, confidence scores: MLP-Pixel shuffle
+    - camera poses: MLP-Avg.Pool-MLP (`Reloc3r`에서 가져옴)
+
+----
+그러면 여기까지 읽었을 때, `뭐야, 모델도 있는 거 (거의) 가져왔고, 학습 기법도 기존 거 가져왔고. 그냥 학습량만 잔뜩 늘린 거 아냐?` 싶을 수 있음.
+
+그래서 숫자들을 미리 보고 왔더니, 그래서 그런지 원본 `VGGT` 대비해서 숫자들이 좋긴하나, 경향성은 거의 비슷하고 살짝 좋아진 정도..
+
+----
+### Method = Loss
+Method는 다음 3개를 설명하고 있음. `3.1 PERMUTATION-EQUIVARIANT ARCHITECTURE, 3.2 SCALE-INVARIANT LOCAL GEOMETRY, 3.3 AFFINE-INVARIANT CAMERA POSE`
+
+`3.1 PERMUTATION-EQUIVARIANT ARCHITECTURE`에서는,
+자기네 기법은 어떤 순서로 이미지가 들어오든 출력들이 1대1 대응이 되기 때문에 순서에 상관없다고 주장***만*** 함
+:question:의문: 그러면 이미지가 많이 들어오면, 예를 들어 (1) 긴 동영상이나 (2) 더 잘 복원하려고 사진 많이 찍으면 메모리도 선형적으로 많이 먹는 구조인가?
+
+`3.2 SCALE-INVARIANT LOCAL GEOMETRY`에서는,
+    - point cloud reconstruction loss: `Moge`에서 가져옴, 차이점으로는 전체 이미지에 대한 단일 scale factor 값 `s*` 적용
+    - normal loss: `Moge`에서 가져옴
+    - confidence: GT point와 L1의 Binary Cross-Entropy
+
+`3.3 AFFINE-INVARIANT CAMERA POSE`에서는,
+    - camera loss: 원본 `VGGT`는 단순하게 GT와의 차이에 Huber loss를 적용했다면, 여기서는 기본적으로는 `VGGT`를 따라가되, rotation과 translation을 각각 쪼개서 좀 더 정교하게 접근+모든 이미지 pair에 대한 weighted sum.
+    - rotation loss: angle loss
+    - translation loss: Huber loss
+
+:exclamation:생각: 기존 `VGGT`는 `N`개에 대해 loss를 계산했지만, 여기서는 `N*(N-1)` 개에 대해 계산하니까, 더 많이 학습할 수 있을 것으로 보임
+
+:exclamation:Our affine-invariant camera model builds on a key insight: real world camera paths are highly structured, not random. They typically lie on a low-dimensional manifold—for instance, a camera orbiting an object moves along a sphere, while a car-mounted camera follows a curve.
+
+해서 최종 loss는 `L = L_points + λ_normal*L_normal + λ_conf*L_conf + λ_cam*L_cam`
+참고로 `VGGT`는 `L = L_points + L_depth + L_cam + λ*L_track`
+
+뎁스 대신 노말로 바꾸고, 신뢰도 로스를 추가하고, tracking 관련 로스가 없어진 게 특이사항.
 ## Results
 
 <!-- Optional: structured benchmark results for cross-paper comparison -->
