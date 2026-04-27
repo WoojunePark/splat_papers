@@ -3,14 +3,14 @@ title: "DiffusionHarmonizer: Bridging Neural Reconstruction and Photorealistic S
 date: 2026-02-27
 arxiv: "2602.24096"
 venue:
-status: to-read
+status: read
 
 abstract: "Simulation is essential to the development and evaluation of autonomous robots such as self-driving vehicles. Neural reconstruction is emerging as a promising solution as it enables simulating a wide variety of scenarios from real-world data alone in an automated and scalable way. However, while methods such as NeRF and 3D Gaussian Splatting can produce visually compelling results, they often exhibit artifacts particularly when rendering novel views, and fail to realistically integrate inserted dynamic objects, especially when they were captured from different scenes. To overcome these limitations, we introduce DiffusionHarmonizer, an online generative enhancement framework that transforms renderings from such imperfect scenes into temporally consistent outputs while improving their realism. At its core is a single-step temporally-conditioned enhancer that is converted from a pretrained multi-step image diffusion model, capable of running in online simulators on a single GPU. The key to training it effectively is a custom data curation pipeline that constructs synthetic-real pairs emphasizing appearance harmonization, artifact correction, and lighting realism. The result is a scalable system that significantly elevates simulation fidelity in both research and production environments."
 
 website: https://research.nvidia.com/labs/sil/projects/diffusion-harmonizer
 code: https://github.com/ZHKKKe/Harmonizer
 openreview: 
-issue: 28
+issue: 
 
 inputs:
   - 
@@ -36,6 +36,18 @@ compared:
 ## My Notes
 
 
+
+**[Note from GitHub, 2026-04-27]**
+
+-
+
+-
+
+-
+
+----
+Diffix3D 와 비슷하게 single step diffusion 으로 깨진 splat 좋게 한다 + Nvidia 논문이길래 후속 논문인가 했는데, 대충 봐서 어떤 차이가 있는 건지 잘 모르겠음..
+대체로 같은 맥락으로 보임
 ## Results
 
 <!-- Optional: structured benchmark results for cross-paper comparison -->
