@@ -1,9 +1,10 @@
 # output: segmentation (broad)
 
-*11 papers*
+*12 papers*
 
 | Paper | Date | Venue |
 |---|---|---|
+| [GEAR](../papers/2604_gear-geometry-motion-alternating-refinement-for.md) | 26.04 | [] |
 | [ReLaGS](../papers/2603_relags-relational-language-gaussian-splatting.md) | 26.03 | [] |
 | [Vision-Language Memory for Spatial Reasoning](../papers/2511_vision-language-memory-for-spatial-reasoning.md) | 25.11 | [] |
 | [LLaVA$^3$](../papers/2511_llava3-representing-3d-scenes-like-a.md) | 25.11 | [] |

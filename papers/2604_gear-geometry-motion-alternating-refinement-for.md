@@ -3,23 +3,28 @@ title: "GEAR: GEometry-motion Alternating Refinement for Articulated Object Mode
 date: 2026-04-09
 arxiv: "2604.07728"
 venue:
-status: to-read
+status: read
 
 abstract: "High-fidelity interactive digital assets are essential for embodied intelligence and robotic interaction, yet articulated objects remain challenging to reconstruct due to their complex structures and coupled geometry-motion relationships. Existing methods suffer from instability in geometry-motion joint optimization, while their generalization remains limited on complex multi-joint or out-of-distribution objects. To address these challenges, we propose GEAR, an EM-style alternating optimization framework that jointly models geometry and motion as interdependent components within a Gaussian Splatting representation. GEAR treats part segmentation as a latent variable and joint motion parameters as explicit variables, alternately refining them for improved convergence and geometric-motion consistency. To enhance part segmentation quality without sacrificing generalization, we leverage a vanilla 2D segmentation model to provide multi-view part priors, and employ a weakly supervised constraint to regularize the latent variable. Experiments on multiple benchmarks and our newly constructed dataset GEAR-Multi demonstrate that GEAR achieves state-of-the-art results in geometric reconstruction and motion parameters estimation, particularly on complex articulated objects with multiple movable parts."
 
 website: 
 code: https://github.com/VIPL-VSU/GEAR
 openreview: 
-issue: 23
+issue: 
 
 inputs:
-  - 
+  - posed-multi-view-images
+  - depth
 
 outputs:
-  - 
+  - articulated
+  - 3d-segmentation
+  - 2dgs
 
 methods:
-  - 
+  - alternating-optimization
+  - expectation-maximization
+  - sam2d
 
 benchmarks:
   - 
@@ -36,6 +41,10 @@ compared:
 ## My Notes
 
 
+
+**[Note from GitHub, 2026-04-27]**
+
+----
 ## Results
 
 <!-- Optional: structured benchmark results for cross-paper comparison -->
