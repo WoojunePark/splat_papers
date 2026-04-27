@@ -1,9 +1,10 @@
 # input: posed-multi-view-images
 
-*17 papers*
+*18 papers*
 
 | Paper | Date | Venue |
 |---|---|---|
+| [Gaussians on a Diet](../papers/2604_gaussians-on-a-diet-high-quality.md) | 26.04 | [] |
 | [GEAR](../papers/2604_gear-geometry-motion-alternating-refinement-for.md) | 26.04 | [] |
 | [In Depth We Trust](../papers/2604_in-depth-we-trust-reliable-monocular.md) | 26.04 | [] |
 | [GSMem](../papers/2603_gsmem-3d-gaussian-splatting-as-persistent.md) | 26.03 | [] |

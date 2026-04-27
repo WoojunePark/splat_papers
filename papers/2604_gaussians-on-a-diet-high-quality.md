@@ -3,23 +3,23 @@ title: "Gaussians on a Diet: High-Quality Memory-Bounded 3D Gaussian Splatting T
 date: 2026-04-21
 arxiv: "2604.20046v1"
 venue:
-status: to-read
+status: read
 
 abstract: "3D Gaussian Splatting (3DGS) has revolutionized novel view synthesis with high-quality rendering through continuous aggregations of millions of 3D Gaussian primitives. However, it suffers from a substantial memory footprint, particularly during training due to uncontrolled densification, posing a critical bottleneck for deployment on memory-constrained edge devices. While existing methods prune redundant Gaussians post-training, they fail to address the peak memory spikes caused by the abrupt growth of Gaussians early in the training process. To solve the training memory consumption problem, we propose a systematic memory-bounded training framework that dynamically optimizes Gaussians through iterative growth and pruning. In other words, the proposed framework alternates between incremental pruning of low-impact Gaussians and strategic growing of new primitives with an adaptive Gaussian compensation, maintaining a near-constant low memory usage while progressively refining rendering fidelity. We comprehensively evaluate the proposed training framework on various real-world datasets under strict memory constraints, showing significant improvements over existing state-of-the-art methods. Particularly, our proposed method practically enables memory-efficient 3DGS training on NVIDIA Jetson AGX Xavier, achieving similar visual quality with up to 80% lower peak training memory consumption than the original 3DGS."
 
 website: 
 code: 
 openreview: 
-issue: 35
+issue: 
 
 inputs:
-  - 
+  - posed-multi-view-images
 
 outputs:
-  - 
+  - 3dgs
 
 methods:
-  - 
+  - efficient-training
 
 benchmarks:
   - 
@@ -36,6 +36,14 @@ compared:
 ## My Notes
 
 
+
+**[Note from GitHub, 2026-04-27]**
+
+----
+최소한의 결과 손실로 training 도중 RAM 사용량을 줄이고자 함. (최종 용량은 목적이 아님)
+
+Table 1. 비교해보면 정량적으로는 Taming 3DGS보다 엄청 크게 개선된 건 아님.
+다만 Fig 8.의 (cherry-picking된) 정성적인 결과물을 보면 Taming 3DGS가 아예 실패한 영역도 자기네 기법으로는 살려낸다고 주장.
 ## Results
 
 <!-- Optional: structured benchmark results for cross-paper comparison -->
