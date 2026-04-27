@@ -3,23 +3,27 @@ title: "PackUV: Packed Gaussian UV Maps for 4D Volumetric Video"
 date: 2026-02-26
 arxiv: "2602.23040"
 venue:
-status: to-read
+status: read
 
 abstract: "Volumetric videos offer immersive 4D experiences, but remain difficult to reconstruct, store, and stream at scale. Existing Gaussian Splatting based methods achieve high-quality reconstruction but break down on long sequences, temporal inconsistency, and fail under large motions and disocclusions. Moreover, their outputs are typically incompatible with conventional video coding pipelines, preventing practical applications. We introduce PackUV, a novel 4D Gaussian representation that maps all Gaussian attributes into a sequence of structured, multi-scale UV atlas, enabling compact, image-native storage. To fit this representation from multi-view videos, we propose PackUV-GS, a temporally consistent fitting method that directly optimizes Gaussian parameters in the UV domain. A flow-guided Gaussian labeling and video keyframing module identifies dynamic Gaussians, stabilizes static regions, and preserves temporal coherence even under large motions and disocclusions. The resulting UV atlas format is the first unified volumetric video representation compatible with standard video codecs (e.g., FFV1) without losing quality, enabling efficient streaming within existing multimedia infrastructure. To evaluate long-duration volumetric capture, we present PackUV-2B, the largest multi-view video dataset to date, featuring more than 50 synchronized cameras, substantial motion, and frequent disocclusions across 100 sequences and 2B (billion) frames. Extensive experiments demonstrate that our method surpasses existing baselines in rendering fidelity while scaling to sequences up to 30 minutes with consistent quality."
 
 website: https://ivl.cs.brown.edu/packuv
 code: https://github.com/pytorch/torchcodec
 openreview: 
-issue: 27
+issue: 
 
 inputs:
-  - 
+  - posed-multi-view-video
 
 outputs:
-  - 
+  - compact
+  - 4dgs
 
 methods:
-  - 
+  - uv-fitting
+  - video-codec-compatible
+  - optical-flow
+  - dataset
 
 benchmarks:
   - 
@@ -36,6 +40,14 @@ compared:
 ## My Notes
 
 
+
+**[Note from GitHub, 2026-04-27]**
+
+----
+
+    - `PackUV`, a new volumetric video representation that packs 3D Gaussian attributes into a sequence of UV atlases for efficient streaming and storage, making it readily compatible with existing video coding infrastructure.
+    - `PackUV-GS`, an efficient method to fit PackUV directly from multiview videos using optical-flow-based keyframing and Gaussian labeling to handle large motions, disocclusions, and temporal consistency.
+    - `PackUV-2B`, the largest multi-view 4D dataset with 2B frames, large motions, and disocclusions. It provides 360◦ coverage from 50+ synchronized cameras.
 ## Results
 
 <!-- Optional: structured benchmark results for cross-paper comparison -->

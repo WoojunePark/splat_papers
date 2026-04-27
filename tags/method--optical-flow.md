@@ -1,8 +1,7 @@
-# output: 4dgs
+# method: optical-flow
 
-*2 papers*
+*1 papers*
 
 | Paper | Date | Venue |
 |---|---|---|
 | [PackUV](../papers/2602_packuv-packed-gaussian-uv-maps-for.md) | 26.02 | [] |
-| [Feature4X](../papers/2503_feature4x-bridging-any-monocular-video-to.md) | 25.03 | [] |
